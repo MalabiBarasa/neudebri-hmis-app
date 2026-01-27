@@ -1,0 +1,70 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-4">Welcome, {{ user.get_full_name|default:user.username }}!</h1>
+        <p class="lead text-muted">System Administrator | Neudebri Woundcare Hospital</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-users text-primary"></i> Patients</h5>
+                <p class="card-text">Manage patient records</p>
+                <a href="{% url 'patient_list' %}" class="btn btn-sm btn-primary">View</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-calendar text-info"></i> Appointments</h5>
+                <p class="card-text">Schedule appointments</p>
+                <a href="{% url 'appointment_list' %}" class="btn btn-sm btn-info">View</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-flask text-success"></i> Laboratory</h5>
+                <p class="card-text">Lab requests</p>
+                <a href="{% url 'lab_request_list' %}" class="btn btn-sm btn-success">View</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-pills text-warning"></i> Pharmacy</h5>
+                <p class="card-text">Prescriptions</p>
+                <a href="{% url 'prescription_list' %}" class="btn btn-sm btn-warning">View</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-stethoscope text-danger"></i> Outpatient</h5>
+                <p class="card-text">Outpatient visits</p>
+                <a href="{% url 'outpatient_visit_list' %}" class="btn btn-sm btn-danger">View</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-heartbeat text-secondary"></i> Vital Signs</h5>
+                <p class="card-text">Monitor vitals</p>
+                <a href="{% url 'vital_signs_list' %}" class="btn btn-sm btn-secondary">View</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

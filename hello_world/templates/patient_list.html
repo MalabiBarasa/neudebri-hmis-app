@@ -1,0 +1,10 @@
+{% extends "index.html" %}
+{% load django_tables2 %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Patients</h2>
+    <a href="{% url 'patient_create' %}" class="btn btn-primary">Add Patient</a>
+</div>
+{% render_table table %}
+{% endblock %}
