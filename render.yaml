@@ -3,8 +3,8 @@ services:
     name: neudebri-hmis
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
-    startCommand: gunicorn hello_world.wsgi:application --bind 0.0.0.0:$PORT
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: bash render_startup.sh
     envVars:
       - key: DEBUG
         value: "False"
@@ -25,5 +25,6 @@ databases:
     user: neudebri_user
     plan: free
     postgresMajorVersion: 15
+
 
 
