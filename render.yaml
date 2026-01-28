@@ -16,13 +16,10 @@ services:
     # Build phase: Install dependencies + collect static files
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     
-    # Start phase: Pure Python startup script handles:
-    # 1. Database connectivity verification with retries
-    # 2. Django migrations (creates all tables)
-    # 3. Initial data loading (admin + staff users)
-    # 4. Gunicorn WSGI server startup
-    # Uses pure Python for reliability (no bash script dependencies)
-    startCommand: python startup.py
+    # Start phase: Direct gunicorn with WSGI middleware that handles migrations
+    # The wsgi.py application initializes and runs migrations on first app load
+    # This is the most reliable approach for Render's container environment
+    startCommand: gunicorn hello_world.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 30
     
     # Environment variables - critical for production deployment
     envVars:

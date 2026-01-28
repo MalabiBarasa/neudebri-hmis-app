@@ -7,21 +7,24 @@ Pure Python - no bash dependency issues.
 import os
 import sys
 import time
-import django
 import logging
 from pathlib import Path
 
-# Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hello_world.settings')
-sys.path.insert(0, str(Path(__file__).parent))
-
-# Configure logging
+# Configure logging FIRST
 logging.basicConfig(
     level=logging.INFO,
     format='[%(asctime)s] %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+# Setup Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hello_world.settings')
+sys.path.insert(0, str(Path(__file__).parent))
+
+# Initialize Django IMMEDIATELY
+import django
+django.setup()
 
 def banner(message):
     """Print formatted banner"""
