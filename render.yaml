@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: neudebri-hmis
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
+    startCommand: gunicorn hello_world.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "*.onrender.com"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: neudebri-hmis-db
+          property: connectionString
+
+databases:
+  - name: neudebri-hmis-db
+    databaseName: neudebri_hmis
+    user: neudebri_user
+    plan: free
+    postgresMajorVersion: 15
