@@ -69,6 +69,28 @@ def run_startup_migrations():
         if profile_created:
             logger.info("[WSGI] ✓ Created admin user profile")
         
+        # Set passwords for all staff accounts on startup
+        # This ensures Render production always has correct passwords
+        staff_passwords = {
+            'doctor1': 'doctor1',
+            'doctor2': 'doctor2',
+            'doctor3': 'doctor3',
+            'nurse4': 'nurse4',
+            'nurse5': 'nurse5',
+            'lab_tech6': 'lab_tech6',
+            'pharmacist7': 'pharmacist7',
+            'cashier8': 'cashier8',
+        }
+        
+        for username, password in staff_passwords.items():
+            try:
+                user = User.objects.get(username=username)
+                user.set_password(password)
+                user.save()
+                logger.info(f"[WSGI] ✓ Set password for {username}")
+            except User.DoesNotExist:
+                logger.info(f"[WSGI] User {username} does not exist yet")
+        
     except Exception as e:
         logger.error(f"[WSGI] Migration error: {e}", exc_info=True)
         # Don't crash - app can still start
