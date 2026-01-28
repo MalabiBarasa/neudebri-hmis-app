@@ -52,10 +52,13 @@ def run_startup_migrations():
                 'is_superuser': True,
             }
         )
+        # Always set admin password on startup to ensure it's correct on Render
+        admin_user.set_password('admin1234')
+        admin_user.save()
         if created:
-            admin_user.set_password('admin1234')
-            admin_user.save()
             logger.info("[WSGI] ✓ Created admin user")
+        else:
+            logger.info("[WSGI] ✓ Reset admin password")
         
         # Create UserProfile for admin user if it doesn't exist
         from hello_world.core.models import UserProfile
