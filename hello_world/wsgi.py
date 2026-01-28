@@ -72,27 +72,49 @@ def run_startup_migrations():
         if profile_created:
             logger.info("[WSGI] ✓ Created admin user profile")
         
-        # Set passwords for all staff accounts on startup
-        # This ensures Render production always has correct passwords
-        staff_passwords = {
-            'doctor1': 'doctor1',
-            'doctor2': 'doctor2',
-            'doctor3': 'doctor3',
-            'nurse4': 'nurse4',
-            'nurse5': 'nurse5',
-            'lab_tech6': 'lab_tech6',
-            'pharmacist7': 'pharmacist7',
-            'cashier8': 'cashier8',
+        # Create and set passwords for all staff accounts on startup
+        # This ensures Render production always has all users with correct passwords
+        staff_data = {
+            'doctor1': {'password': 'doctor1', 'role': 'doctor', 'email': 'doctor1@neudebri.com'},
+            'doctor2': {'password': 'doctor2', 'role': 'doctor', 'email': 'doctor2@neudebri.com'},
+            'doctor3': {'password': 'doctor3', 'role': 'doctor', 'email': 'doctor3@neudebri.com'},
+            'nurse4': {'password': 'nurse4', 'role': 'nurse', 'email': 'nurse4@neudebri.com'},
+            'nurse5': {'password': 'nurse5', 'role': 'nurse', 'email': 'nurse5@neudebri.com'},
+            'lab_tech6': {'password': 'lab_tech6', 'role': 'laboratory_technician', 'email': 'lab_tech6@neudebri.com'},
+            'pharmacist7': {'password': 'pharmacist7', 'role': 'pharmacist', 'email': 'pharmacist7@neudebri.com'},
+            'cashier8': {'password': 'cashier8', 'role': 'cashier', 'email': 'cashier8@neudebri.com'},
         }
         
-        for username, password in staff_passwords.items():
-            try:
-                user = User.objects.get(username=username)
-                user.set_password(password)
-                user.save()
-                logger.info(f"[WSGI] ✓ Set password for {username}")
-            except User.DoesNotExist:
-                logger.info(f"[WSGI] User {username} does not exist yet")
+        for username, info in staff_data.items():
+            # Create or get the user
+            staff_user, staff_created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': info['email'],
+                    'first_name': username,
+                    'last_name': 'Staff',
+                    'is_staff': True,
+                }
+            )
+            # Always set the password on startup
+            staff_user.set_password(info['password'])
+            staff_user.save()
+            
+            if staff_created:
+                logger.info(f"[WSGI] ✓ Created staff user {username}")
+            else:
+                logger.info(f"[WSGI] ✓ Reset password for {username}")
+            
+            # Create UserProfile for staff user if needed
+            staff_profile, profile_created = UserProfile.objects.get_or_create(
+                user=staff_user,
+                defaults={
+                    'role': info['role'],
+                    'employee_id': f"{username.upper()}001",
+                }
+            )
+            if profile_created:
+                logger.info(f"[WSGI] ✓ Created profile for {username}")
         
     except Exception as e:
         logger.error(f"[WSGI] Migration error: {e}", exc_info=True)
