@@ -57,6 +57,18 @@ def run_startup_migrations():
             admin_user.save()
             logger.info("[WSGI] ✓ Created admin user")
         
+        # Create UserProfile for admin user if it doesn't exist
+        from hello_world.core.models import UserProfile
+        admin_profile, profile_created = UserProfile.objects.get_or_create(
+            user=admin_user,
+            defaults={
+                'role': 'admin',
+                'employee_id': 'ADMIN001',
+            }
+        )
+        if profile_created:
+            logger.info("[WSGI] ✓ Created admin user profile")
+        
     except Exception as e:
         logger.error(f"[WSGI] Migration error: {e}", exc_info=True)
         # Don't crash - app can still start
