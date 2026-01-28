@@ -16,9 +16,13 @@ services:
     # Build phase: Install dependencies + collect static files
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     
-    # Start phase: Run migrations → Load data → Start gunicorn
-    # Custom bash script ensures proper initialization sequence with error handling
-    startCommand: bash render_startup.sh
+    # Start phase: Pure Python startup script handles:
+    # 1. Database connectivity verification with retries
+    # 2. Django migrations (creates all tables)
+    # 3. Initial data loading (admin + staff users)
+    # 4. Gunicorn WSGI server startup
+    # Uses pure Python for reliability (no bash script dependencies)
+    startCommand: python startup.py
     
     # Environment variables - critical for production deployment
     envVars:
