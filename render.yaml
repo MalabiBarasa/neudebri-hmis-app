@@ -1,30 +1,73 @@
+# Professional Render Deployment Configuration
+# Django HMIS - Hospital Management Information System
+# 
+# This file configures:
+# 1. Web service with Python runtime
+# 2. PostgreSQL database (persistent)
+# 3. Automatic migrations and data loading
+# 4. Environment variables for production
+
 services:
   - type: web
     name: neudebri-hmis
     env: python
     plan: free
+    
+    # Build phase: Install dependencies + collect static files
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    
+    # Start phase: Run migrations → Load data → Start gunicorn
+    # Custom bash script ensures proper initialization sequence with error handling
     startCommand: bash render_startup.sh
+    
+    # Environment variables - critical for production deployment
     envVars:
+      # Security: Disable debug mode in production
       - key: DEBUG
         value: "False"
+      
+      # Security: Auto-generate random SECRET_KEY (DO NOT commit real keys)
       - key: SECRET_KEY
         generateValue: true
+      
+      # Network: Allow requests to this domain
+      # *.onrender.com accepts any Render subdomain
       - key: ALLOWED_HOSTS
         value: "*.onrender.com"
+      
+      # Logging: Unbuffered output for real-time log visibility
       - key: PYTHONUNBUFFERED
         value: "1"
+      
+      # Database: Auto-linked from PostgreSQL instance below
+      # Format: postgresql://user:password@host/database
+      # This env var is essential for startup_migrations.py to detect production
       - key: DATABASE_URL
         fromDatabase:
           name: neudebri-hmis-db
           property: connectionString
 
+# PostgreSQL Database - Free tier is suitable for testing/small deployments
+# Replaces SQLite for production (SQLite is ephemeral on Render)
 databases:
   - name: neudebri-hmis-db
     databaseName: neudebri_hmis
     user: neudebri_user
     plan: free
     postgresMajorVersion: 15
+
+# Deployment Notes:
+# 1. First deployment: 2-3 minutes (PostgreSQL initialization + migrations)
+# 2. Subsequent deploys: 30-60 seconds
+# 3. Database persists across deployments
+# 4. Migrations run automatically at app startup (startup_migrations.py)
+# 5. Initial data (admin user + 8 staff accounts) created automatically
+#
+# Troubleshooting:
+# - If "relation 'auth_user' does not exist": Wait for startup migrations to complete
+# - Monitor logs at: dashboard.render.com → Your Service → Logs
+# - Look for: "✓ Migrations completed successfully"
+# - Login: admin / admin1234
 
 
 
