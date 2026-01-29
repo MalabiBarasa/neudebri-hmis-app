@@ -752,6 +752,24 @@ class PaymentTransaction(models.Model):
         ('completed', 'Completed'),
         ('failed', 'Failed'),
         ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    ]
+    
+    # Kenya-specific payment methods
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Cash'),
+        ('mpesa', 'M-Pesa'),
+        ('airtel_money', 'Airtel Money'),
+        ('equity_bank', 'Equity Bank'),
+        ('kcb_bank', 'KCB Bank'),
+        ('co_op_bank', 'Co-op Bank'),
+        ('other_bank', 'Other Bank Transfer'),
+        ('card_visa', 'Visa Card'),
+        ('card_mastercard', 'Mastercard'),
+        ('card_debit', 'Debit Card'),
+        ('insurance_claim', 'Insurance Claim Payment'),
+        ('employer_scheme', 'Employer/Corporate Scheme'),
+        ('credit_account', 'Hospital Credit Account'),
     ]
     
     billing = models.ForeignKey(WoundBilling, on_delete=models.CASCADE, related_name='transactions')
@@ -759,23 +777,38 @@ class PaymentTransaction(models.Model):
     
     # Payment Details
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=50, choices=[
-        ('cash', 'Cash'),
-        ('card', 'Card'),
-        ('check', 'Check'),
-        ('mobile_money', 'Mobile Money (M-Pesa)'),
-        ('bank_transfer', 'Bank Transfer'),
-        ('insurance_claim', 'Insurance Claim'),
-    ])
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES)
+    
+    # Mobile Money Specific (M-Pesa, Airtel, etc.)
+    mpesa_phone = models.CharField(max_length=15, blank=True, help_text="M-Pesa phone number")
+    mpesa_receipt = models.CharField(max_length=20, blank=True, help_text="M-Pesa STK confirmation code")
+    
+    # Bank Transfer Specific
+    bank_name = models.CharField(max_length=100, blank=True)
+    bank_account = models.CharField(max_length=30, blank=True)
+    cheque_number = models.CharField(max_length=20, blank=True)
+    
+    # Card Payment Specific
+    card_last4 = models.CharField(max_length=4, blank=True, help_text="Last 4 digits of card")
+    card_reference = models.CharField(max_length=50, blank=True, help_text="Card processor reference")
     
     # Transaction Status
     status = models.CharField(max_length=20, choices=TRANSACTION_STATUS, default='completed')
     transaction_date = models.DateTimeField(default=timezone.now)
     
-    # Additional Info
-    receipt_number = models.CharField(max_length=50, blank=True)
+    # Verification & Receipt
+    receipt_number = models.CharField(max_length=50, blank=True, unique=True)
+    is_verified = models.BooleanField(default=False, help_text="Payment verified/confirmed")
+    verification_date = models.DateTimeField(blank=True, null=True)
+    
+    # Notes
     notes = models.TextField(blank=True)
     processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Refund Tracking
+    refund_ref = models.CharField(max_length=50, blank=True, unique=True)
+    refund_date = models.DateTimeField(blank=True, null=True)
+    refund_reason = models.TextField(blank=True)
     
     # Tracking
     created_at = models.DateTimeField(auto_now_add=True)
@@ -785,10 +818,12 @@ class PaymentTransaction(models.Model):
         ordering = ['-transaction_date']
         indexes = [
             models.Index(fields=['billing', 'transaction_date']),
+            models.Index(fields=['payment_method', 'status']),
+            models.Index(fields=['mpesa_phone', 'transaction_date']),
         ]
     
     def __str__(self):
-        return f"{self.transaction_ref} - {self.amount} ({self.get_payment_method_display()})"
+        return f"{self.transaction_ref} - KES {self.amount} ({self.get_payment_method_display()})"
 
 
 class InsuranceClaim(models.Model):
@@ -838,3 +873,146 @@ class InsuranceClaim(models.Model):
     
     def __str__(self):
         return f"Claim #{self.claim_number} - {self.billing.wound.wound_id} ({self.get_claim_status_display()})"
+
+
+class PatientBillingAccount(models.Model):
+    """Hospital credit account for patients in Kenya"""
+    ACCOUNT_STATUS = [
+        ('active', 'Active'),
+        ('suspended', 'Suspended'),
+        ('closed', 'Closed'),
+        ('dormant', 'Dormant'),
+    ]
+    
+    patient = models.OneToOneField(Patient, on_delete=models.CASCADE, related_name='billing_account')
+    account_number = models.CharField(max_length=20, unique=True)
+    
+    # Account Details
+    credit_limit = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Maximum credit allowed")
+    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Current outstanding balance")
+    available_credit = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Available credit remaining")
+    
+    # Payment Terms
+    payment_terms_days = models.IntegerField(default=30, help_text="Days allowed for payment")
+    
+    # Account Status
+    status = models.CharField(max_length=20, choices=ACCOUNT_STATUS, default='active')
+    is_verified = models.BooleanField(default=False, help_text="Account verified by finance")
+    
+    # Employer/Corporate Scheme
+    employer_name = models.CharField(max_length=200, blank=True)
+    employer_contact = models.CharField(max_length=100, blank=True)
+    employer_reference = models.CharField(max_length=50, blank=True)
+    
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_payment_date = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['patient', 'status']),
+            models.Index(fields=['account_number']),
+        ]
+    
+    def __str__(self):
+        return f"Account {self.account_number} - {self.patient.full_name}"
+    
+    def save(self, *args, **kwargs):
+        """Update available credit"""
+        self.available_credit = self.credit_limit - self.current_balance
+        super().save(*args, **kwargs)
+
+
+class CreditAccountTransaction(models.Model):
+    """Track transactions on patient credit accounts"""
+    TRANSACTION_TYPE = [
+        ('charge', 'Service Charge'),
+        ('payment', 'Payment Received'),
+        ('credit', 'Credit Adjustment'),
+        ('waiver', 'Amount Waived'),
+    ]
+    
+    account = models.ForeignKey(PatientBillingAccount, on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE)
+    
+    # Transaction Details
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.CharField(max_length=200)
+    transaction_date = models.DateTimeField(default=timezone.now)
+    
+    # Related Billing
+    wound_billing = models.ForeignKey(WoundBilling, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Balance After Transaction
+    balance_before = models.DecimalField(max_digits=10, decimal_places=2)
+    balance_after = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Approval
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    approval_notes = models.TextField(blank=True)
+    
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-transaction_date']
+    
+    def __str__(self):
+        return f"{self.get_transaction_type_display()} - {self.account.account_number} - KES {self.amount}"
+
+
+class CorporatePaymentScheme(models.Model):
+    """Manage corporate/employer payment schemes"""
+    PAYMENT_FREQUENCY = [
+        ('weekly', 'Weekly'),
+        ('biweekly', 'Bi-weekly'),
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('annual', 'Annual'),
+    ]
+    
+    SCHEME_STATUS = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('suspended', 'Suspended'),
+    ]
+    
+    name = models.CharField(max_length=200, unique=True)
+    employer = models.ForeignKey(InsuranceProvider, on_delete=models.CASCADE, related_name='corporate_schemes')
+    
+    # Scheme Details
+    description = models.TextField(blank=True)
+    coverage_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=100)
+    maximum_coverage_per_patient = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    
+    # Payment Terms
+    payment_frequency = models.CharField(max_length=20, choices=PAYMENT_FREQUENCY, default='monthly')
+    days_to_pay = models.IntegerField(default=30, help_text="Days allowed before payment is due")
+    
+    # Contacts
+    primary_contact_name = models.CharField(max_length=100, blank=True)
+    primary_contact_phone = models.CharField(max_length=15, blank=True)
+    primary_contact_email = models.EmailField(blank=True)
+    
+    billing_contact_name = models.CharField(max_length=100, blank=True)
+    billing_contact_phone = models.CharField(max_length=15, blank=True)
+    billing_contact_email = models.EmailField(blank=True)
+    
+    # Bank Details for Payments
+    bank_name = models.CharField(max_length=100, blank=True)
+    bank_account_number = models.CharField(max_length=30, blank=True)
+    bank_branch = models.CharField(max_length=100, blank=True)
+    
+    # Status
+    status = models.CharField(max_length=20, choices=SCHEME_STATUS, default='active')
+    
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.employer.name})"

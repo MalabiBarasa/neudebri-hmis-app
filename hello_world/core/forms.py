@@ -231,16 +231,25 @@ class WoundBillingForm(forms.ModelForm):
         }
 
 class PaymentTransactionForm(forms.ModelForm):
-    """Form for recording payment transactions"""
+    """Form for recording payment transactions - Kenya optimized"""
     class Meta:
         model = PaymentTransaction
         fields = [
-            'amount', 'payment_method', 'receipt_number', 'notes'
+            'amount', 'payment_method', 'mpesa_phone', 'mpesa_receipt',
+            'bank_name', 'bank_account', 'cheque_number', 
+            'card_last4', 'card_reference', 'receipt_number', 'notes'
         ]
         widgets = {
-            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'KES'}),
             'payment_method': forms.Select(attrs={'class': 'form-control'}),
-            'receipt_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional receipt/reference number'}),
+            'mpesa_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0712345678'}),
+            'mpesa_receipt': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. RFV5ABC123'}),
+            'bank_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'bank_account': forms.TextInput(attrs={'class': 'form-control'}),
+            'cheque_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'card_last4': forms.TextInput(attrs={'class': 'form-control', 'maxlength': '4'}),
+            'card_reference': forms.TextInput(attrs={'class': 'form-control'}),
+            'receipt_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional receipt number'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
 
@@ -254,9 +263,74 @@ class InsuranceClaimForm(forms.ModelForm):
             'submission_notes', 'claim_documents'
         ]
         widgets = {
-            'claim_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'claim_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'KES'}),
             'insurance_provider': forms.Select(attrs={'class': 'form-control'}),
             'medical_scheme': forms.Select(attrs={'class': 'form-control'}),
             'submission_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'claim_documents': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'List documents: receipt.pdf, prescription.pdf, etc.'}),
+        }
+
+
+class PatientBillingAccountForm(forms.ModelForm):
+    """Form for creating and managing patient billing accounts"""
+    class Meta:
+        model = PatientBillingAccount
+        fields = [
+            'patient', 'credit_limit', 'payment_terms_days',
+            'employer_name', 'employer_contact', 'employer_reference'
+        ]
+        widgets = {
+            'patient': forms.Select(attrs={'class': 'form-control'}),
+            'credit_limit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'KES'}),
+            'payment_terms_days': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'employer_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional: Employer name'}),
+            'employer_contact': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional: Contact info'}),
+            'employer_reference': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional: Reference code'}),
+        }
+
+
+class CreditAccountTransactionForm(forms.ModelForm):
+    """Form for recording credit account transactions"""
+    class Meta:
+        model = CreditAccountTransaction
+        fields = [
+            'transaction_type', 'amount', 'description', 'approval_notes'
+        ]
+        widgets = {
+            'transaction_type': forms.Select(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'KES'}),
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'approval_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class CorporatePaymentSchemeForm(forms.ModelForm):
+    """Form for managing corporate payment schemes"""
+    class Meta:
+        model = CorporatePaymentScheme
+        fields = [
+            'name', 'employer', 'coverage_percentage', 'maximum_coverage_per_patient',
+            'payment_frequency', 'days_to_pay', 'description',
+            'primary_contact_name', 'primary_contact_phone', 'primary_contact_email',
+            'billing_contact_name', 'billing_contact_phone', 'billing_contact_email',
+            'bank_name', 'bank_account_number', 'bank_branch', 'status'
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'employer': forms.Select(attrs={'class': 'form-control'}),
+            'coverage_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'maximum_coverage_per_patient': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Optional: Maximum per patient'}),
+            'payment_frequency': forms.Select(attrs={'class': 'form-control'}),
+            'days_to_pay': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'primary_contact_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'primary_contact_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+254...'}),
+            'primary_contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'billing_contact_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'billing_contact_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+254...'}),
+            'billing_contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'bank_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'bank_account_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'bank_branch': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
         }

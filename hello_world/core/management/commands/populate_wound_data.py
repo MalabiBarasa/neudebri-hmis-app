@@ -1,9 +1,11 @@
 from django.core.management.base import BaseCommand
-from hello_world.core.models import WoundType, BodyPart, InsuranceProvider, MedicalScheme
+from hello_world.core.models import (
+    WoundType, BodyPart, InsuranceProvider, MedicalScheme, CorporatePaymentScheme
+)
 
 
 class Command(BaseCommand):
-    help = 'Populate wound types, body parts, and insurance data'
+    help = 'Populate wound types, body parts, insurance data, and corporate payment schemes'
 
     def handle(self, *args, **options):
         # Create Wound Types
@@ -131,4 +133,96 @@ class Command(BaseCommand):
                 )
         
         self.stdout.write(self.style.SUCCESS('✅ Created Medical Schemes'))
-        self.stdout.write(self.style.SUCCESS('\n🎉 All wound care reference data populated successfully!'))
+        
+        # Create Corporate Payment Schemes for Kenya
+        corporate_schemes = [
+            {
+                'name': 'Kenya Revenue Authority (KRA) Scheme',
+                'employer': 'NHIF - National Health Insurance Fund',
+                'coverage_percentage': 85,
+                'payment_frequency': 'monthly',
+                'primary_contact_name': 'KRA HR Director',
+                'primary_contact_phone': '+254722123456',
+                'billing_contact_name': 'KRA Finance Officer',
+                'billing_contact_phone': '+254722654321',
+                'bank_name': 'KCB Bank Kenya',
+                'bank_account_number': '0012345678901',
+                'bank_branch': 'Nairobi HQ',
+            },
+            {
+                'name': 'Kenya Power & Lighting Company',
+                'employer': 'Jubilee Insurance',
+                'coverage_percentage': 90,
+                'payment_frequency': 'monthly',
+                'primary_contact_name': 'KPLC HR Manager',
+                'primary_contact_phone': '+254701234567',
+                'billing_contact_name': 'KPLC Finance',
+                'billing_contact_phone': '+254701987654',
+                'bank_name': 'Equity Bank Kenya',
+                'bank_account_number': '0098765432109',
+                'bank_branch': 'Westlands',
+            },
+            {
+                'name': 'Central Bank of Kenya',
+                'employer': 'AAR Insurance',
+                'coverage_percentage': 100,
+                'payment_frequency': 'monthly',
+                'primary_contact_name': 'CBK HR',
+                'primary_contact_phone': '+254722111111',
+                'billing_contact_name': 'CBK Finance',
+                'billing_contact_phone': '+254722222222',
+                'bank_name': 'Co-op Bank',
+                'bank_account_number': '01234567890',
+                'bank_branch': 'Upper Hill',
+            },
+            {
+                'name': 'University of Nairobi Staff',
+                'employer': 'Britam Insurance',
+                'coverage_percentage': 80,
+                'payment_frequency': 'monthly',
+                'primary_contact_name': 'UoN HR',
+                'primary_contact_phone': '+254713333333',
+                'billing_contact_name': 'UoN Finance',
+                'billing_contact_phone': '+254713444444',
+                'bank_name': 'KCB Bank Kenya',
+                'bank_account_number': '1122334455667',
+                'bank_branch': 'Nairobi',
+            },
+            {
+                'name': 'Kenya National Library Service',
+                'employer': 'Amref Insurance',
+                'coverage_percentage': 75,
+                'payment_frequency': 'biweekly',
+                'primary_contact_name': 'KNLS HR',
+                'primary_contact_phone': '+254721555555',
+                'billing_contact_name': 'KNLS Finance',
+                'billing_contact_phone': '+254721666666',
+                'bank_name': 'Equity Bank Kenya',
+                'bank_account_number': '9988776655443',
+                'bank_branch': 'CBD',
+            },
+        ]
+        
+        for scheme_data in corporate_schemes:
+            employer_name = scheme_data.pop('employer')
+            employer = InsuranceProvider.objects.get(name=employer_name)
+            
+            CorporatePaymentScheme.objects.get_or_create(
+                name=scheme_data['name'],
+                defaults={
+                    'employer': employer,
+                    'coverage_percentage': scheme_data['coverage_percentage'],
+                    'payment_frequency': scheme_data['payment_frequency'],
+                    'primary_contact_name': scheme_data.get('primary_contact_name', ''),
+                    'primary_contact_phone': scheme_data.get('primary_contact_phone', ''),
+                    'billing_contact_name': scheme_data.get('billing_contact_name', ''),
+                    'billing_contact_phone': scheme_data.get('billing_contact_phone', ''),
+                    'bank_name': scheme_data.get('bank_name', ''),
+                    'bank_account_number': scheme_data.get('bank_account_number', ''),
+                    'bank_branch': scheme_data.get('bank_branch', ''),
+                    'status': 'active',
+                }
+            )
+        
+        self.stdout.write(self.style.SUCCESS('✅ Created Corporate Payment Schemes'))
+        self.stdout.write(self.style.SUCCESS('\n🎉 All Kenya-specific billing data populated successfully!'))
