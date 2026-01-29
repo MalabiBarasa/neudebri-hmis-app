@@ -177,3 +177,5 @@ ACCOUNT_LOGIN_METHODS = {'username', 'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email', 'username', 'first_name', 'last_name']
 LOGIN_REDIRECT_URL = 'dashboard'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'index'
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+SOCIALACCOUNT_AUTO_SIGNUP = True
