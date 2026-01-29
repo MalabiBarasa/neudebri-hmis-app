@@ -1,0 +1,139 @@
+{% extends "index.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0"><i class="fas fa-receipt"></i> Billing Management</h3>
+                    <small>Wound Case #{{ wound.wound_id }} - Patient: {{ wound.patient.full_name }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Service Charges -->
+                        <h5 class="mb-3"><i class="fas fa-dollar-sign"></i> Service Charges</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Assessment Fee</strong></label>
+                                {{ form.assessment_fee }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Treatment Fee</strong></label>
+                                {{ form.treatment_fee }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Dressing/Supplies Cost</strong></label>
+                                {{ form.dressing_supplies_cost }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Medication Cost</strong></label>
+                                {{ form.medication_cost }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Other Charges</strong></label>
+                                {{ form.other_charges }}
+                            </div>
+                        </div>
+
+                        <!-- Insurance Details -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-shield-alt"></i> Insurance & Payment Breakdown</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.insurance_covers }}
+                                    <label class="form-check-label" for="{{ form.insurance_covers.id_for_label }}">
+                                        <strong>Insurance Covers This Case</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Insurance Amount</strong></label>
+                                {{ form.insurance_amount }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Patient Copay Amount</strong></label>
+                                {{ form.patient_copay }}
+                            </div>
+                        </div>
+
+                        <!-- Payment Information -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-credit-card"></i> Payment Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Amount Paid</strong></label>
+                                {{ form.amount_paid }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Payment Method</strong></label>
+                                {{ form.payment_method }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Payment Date</strong></label>
+                                {{ form.payment_date }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Payment Status</strong></label>
+                                {{ form.payment_status }}
+                            </div>
+                        </div>
+
+                        <!-- Summary -->
+                        <hr>
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> Billing Summary</h6>
+                            {% if billing %}
+                                <p class="mb-2">
+                                    <strong>Total Amount:</strong> <span class="badge bg-primary p-2">{{ billing.total_amount }}</span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Insurance Covers:</strong> {{ billing.insurance_amount }}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Patient Responsibility:</strong> {{ billing.patient_copay }}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Amount Paid:</strong> {{ billing.amount_paid }}
+                                </p>
+                                <p>
+                                    <strong>Balance Due:</strong> <span class="badge bg-danger p-2">{{ billing.balance }}</span>
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save"></i> Update Billing
+                            </button>
+                            <a href="{% url 'wound_detail' wound.id %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Back to Case
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

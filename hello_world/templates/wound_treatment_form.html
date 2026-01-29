@@ -1,0 +1,86 @@
+{% extends "index.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card shadow-lg">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0"><i class="fas fa-stethoscope"></i> {{ title }}</h3>
+                    <small>Wound Case #{{ wound.wound_id }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Treatment Type -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Treatment Type</strong></label>
+                            {{ form.treatment_type }}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Treatment Description</strong></label>
+                            {{ form.description }}
+                            <small class="form-text text-muted">Detailed description of treatment performed</small>
+                        </div>
+
+                        <!-- Materials Used -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Materials/Supplies Used</strong></label>
+                            {{ form.materials_used }}
+                            <small class="form-text text-muted">e.g., Sterile gauze, Normal saline, Iodine antiseptic, etc.</small>
+                        </div>
+
+                        <!-- Post-Treatment Assessment -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-heartbeat"></i> Post-Treatment Assessment</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Pain Level After (0-10)</strong></label>
+                                {{ form.pain_after }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.bleeding }}
+                                    <label class="form-check-label" for="{{ form.bleeding.id_for_label }}">
+                                        <strong>Bleeding</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Complications -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Complications (if any)</strong></label>
+                            {{ form.complications }}
+                        </div>
+
+                        <!-- Patient Instructions -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-info-circle"></i> Home Care Instructions</h5>
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Instructions for Patient</strong></label>
+                            {{ form.instructions }}
+                            <small class="form-text text-muted">Include dressing change instructions, activity restrictions, warning signs, etc.</small>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-info btn-lg">
+                                <i class="fas fa-check"></i> Record Treatment
+                            </button>
+                            <a href="{% url 'wound_detail' wound.id %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Back to Case
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -472,3 +472,274 @@ class Asset(models.Model):
 
     def __str__(self):
         return f"{self.asset_tag} - {self.name}"
+
+
+# ==================== WOUND CARE MANAGEMENT SYSTEM ====================
+# Professional integrated wound care system for all staff
+
+class WoundType(models.Model):
+    """Classification of wound types"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=50, choices=[
+        ('acute', 'Acute Wound'),
+        ('chronic', 'Chronic Wound'),
+        ('surgical', 'Surgical Wound'),
+        ('trauma', 'Trauma Wound'),
+        ('burn', 'Burn Wound'),
+        ('ulcer', 'Pressure/Leg Ulcer'),
+        ('diabetic', 'Diabetic Ulcer'),
+    ])
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class BodyPart(models.Model):
+    """Body parts for wound location"""
+    name = models.CharField(max_length=100, unique=True)
+    category = models.CharField(max_length=50, choices=[
+        ('head', 'Head/Face'),
+        ('trunk', 'Trunk'),
+        ('upper_limb', 'Upper Limb'),
+        ('lower_limb', 'Lower Limb'),
+        ('other', 'Other'),
+    ])
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class WoundCare(models.Model):
+    """Main wound care assessment and tracking"""
+    WOUND_STATUS_CHOICES = [
+        ('active', 'Active Case'),
+        ('pending', 'Pending Treatment'),
+        ('healing', 'Healing'),
+        ('resolved', 'Resolved'),
+        ('closed', 'Closed'),
+    ]
+    
+    # Identification
+    wound_id = models.CharField(max_length=20, unique=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='wound_cases')
+    
+    # Assessment Info
+    assessment_date = models.DateTimeField(default=timezone.now)
+    assessed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='wound_assessments')
+    
+    # Wound Details
+    wound_type = models.ForeignKey(WoundType, on_delete=models.SET_NULL, null=True)
+    body_part = models.ForeignKey(BodyPart, on_delete=models.SET_NULL, null=True)
+    laterality = models.CharField(max_length=20, choices=[
+        ('left', 'Left'),
+        ('right', 'Right'),
+        ('bilateral', 'Bilateral'),
+        ('midline', 'Midline'),
+    ], blank=True)
+    
+    # Wound Measurements
+    length_cm = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text="Length in cm")
+    width_cm = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text="Width in cm")
+    depth_cm = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text="Depth in cm")
+    surface_area_cm2 = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, help_text="Surface area in cm²")
+    
+    # Clinical Assessment
+    appearance = models.TextField(blank=True, help_text="Describe wound appearance, color, etc.")
+    exudate = models.CharField(max_length=50, choices=[
+        ('none', 'No exudate'),
+        ('serous', 'Serous (clear/straw)'),
+        ('seropurulent', 'Seropurulent (cloudy/yellow)'),
+        ('purulent', 'Purulent (thick/yellow-green)'),
+        ('sanguineous', 'Sanguineous (blood)'),
+    ], blank=True)
+    exudate_amount = models.CharField(max_length=20, choices=[
+        ('minimal', 'Minimal'),
+        ('moderate', 'Moderate'),
+        ('heavy', 'Heavy'),
+    ], blank=True)
+    
+    # Pain and Edema
+    pain_level = models.IntegerField(default=0, validators=[MinValueValidator(0)])  # 0-10 scale
+    has_edema = models.BooleanField(default=False)
+    edema_grade = models.CharField(max_length=20, choices=[
+        ('none', 'None'),
+        ('mild', 'Mild 1+'),
+        ('moderate', 'Moderate 2+'),
+        ('severe', 'Severe 3+'),
+        ('pitting', 'Pitting 4+'),
+    ], blank=True)
+    
+    # Infection Status
+    signs_of_infection = models.BooleanField(default=False)
+    infection_notes = models.TextField(blank=True)
+    
+    # Insurance & Billing
+    patient_insurance = models.ForeignKey(InsuranceProvider, on_delete=models.SET_NULL, null=True, blank=True)
+    insurance_covers = models.BooleanField(default=False)
+    copay_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Patient's copay %")
+    
+    # Status Tracking
+    status = models.CharField(max_length=20, choices=WOUND_STATUS_CHOICES, default='active')
+    next_visit_date = models.DateField(blank=True, null=True)
+    
+    # Notes & History
+    clinical_notes = models.TextField(blank=True)
+    treatment_plan = models.TextField(blank=True)
+    
+    # System Fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-assessment_date']
+        indexes = [
+            models.Index(fields=['patient', 'status']),
+            models.Index(fields=['assessment_date']),
+        ]
+
+    def __str__(self):
+        return f"Wound #{self.wound_id} - {self.patient.full_name} - {self.get_status_display()}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-calculate surface area if length and width are provided"""
+        if self.length_cm and self.width_cm and not self.surface_area_cm2:
+            self.surface_area_cm2 = self.length_cm * self.width_cm
+        super().save(*args, **kwargs)
+
+
+class WoundTreatment(models.Model):
+    """Wound care treatment procedures and interventions"""
+    wound = models.ForeignKey(WoundCare, on_delete=models.CASCADE, related_name='treatments')
+    treatment_date = models.DateTimeField(default=timezone.now)
+    performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    # Treatment Details
+    treatment_type = models.CharField(max_length=100, choices=[
+        ('dressing_change', 'Dressing Change'),
+        ('debridement', 'Debridement'),
+        ('wound_wash', 'Wound Wash/Irrigation'),
+        ('antiseptic', 'Antiseptic/Antibiotic Application'),
+        ('compression', 'Compression Therapy'),
+        ('vacuum_therapy', 'Negative Pressure (VAC) Therapy'),
+        ('medication', 'Medication Application'),
+        ('cultures', 'Wound Culture/Sample'),
+        ('other', 'Other Procedure'),
+    ])
+    
+    description = models.TextField(help_text="Detailed description of treatment performed")
+    materials_used = models.TextField(blank=True, help_text="Dressings, antiseptics, gauze, etc.")
+    
+    # Post-Treatment Assessment
+    pain_after = models.IntegerField(default=0, validators=[MinValueValidator(0)], help_text="Pain level after (0-10)")
+    bleeding = models.BooleanField(default=False)
+    complications = models.TextField(blank=True)
+    
+    # Notes for Next Visit
+    instructions = models.TextField(blank=True, help_text="Home care instructions for patient")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-treatment_date']
+
+    def __str__(self):
+        return f"{self.get_treatment_type_display()} - {self.wound.wound_id} ({self.treatment_date.date()})"
+
+
+class WoundBilling(models.Model):
+    """Billing integration for wound care services"""
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending Payment'),
+        ('partial', 'Partially Paid'),
+        ('paid', 'Fully Paid'),
+        ('waived', 'Waived/Free'),
+    ]
+    
+    wound = models.OneToOneField(WoundCare, on_delete=models.CASCADE, related_name='billing')
+    billing_date = models.DateTimeField(default=timezone.now)
+    
+    # Service Charges
+    assessment_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    treatment_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    dressing_supplies_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    medication_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    other_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Insurance & Payment
+    insurance_covers = models.BooleanField(default=False)
+    insurance_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    patient_copay = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Payment Tracking
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('card', 'Card'),
+        ('check', 'Check'),
+        ('mobile_money', 'Mobile Money'),
+        ('insurance', 'Insurance'),
+        ('waived', 'Waived'),
+    ], blank=True)
+    payment_date = models.DateField(blank=True, null=True)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Invoice #{self.id} - {self.wound.wound_id} - {self.get_payment_status_display()}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-calculate totals"""
+        self.total_amount = (self.assessment_fee + self.treatment_fee + 
+                            self.dressing_supplies_cost + self.medication_cost + 
+                            self.other_charges)
+        self.balance = self.total_amount - self.amount_paid
+        super().save(*args, **kwargs)
+
+
+class WoundFollowUp(models.Model):
+    """Follow-up visits and progress tracking"""
+    wound = models.ForeignKey(WoundCare, on_delete=models.CASCADE, related_name='follow_ups')
+    followup_date = models.DateTimeField(default=timezone.now)
+    conducted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    # Progress Assessment
+    wound_status = models.CharField(max_length=20, choices=[
+        ('improving', 'Improving'),
+        ('stable', 'Stable'),
+        ('deteriorating', 'Deteriorating'),
+        ('resolved', 'Resolved'),
+    ])
+    
+    # Updated Measurements
+    length_cm = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    width_cm = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    depth_cm = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    
+    # Assessment
+    appearance_notes = models.TextField(blank=True)
+    pain_level = models.IntegerField(default=0)
+    signs_of_infection = models.BooleanField(default=False)
+    
+    # Treatment Adjustment
+    treatment_adjusted = models.BooleanField(default=False)
+    adjustment_reason = models.TextField(blank=True)
+    
+    # Next Steps
+    next_followup_date = models.DateField(blank=True, null=True)
+    notes = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-followup_date']
+
+    def __str__(self):
+        return f"Follow-up - {self.wound.wound_id} ({self.followup_date.date()})"

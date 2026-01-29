@@ -127,3 +127,105 @@ class InventoryItemForm(forms.ModelForm):
         widgets = {
             'expiry_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+
+# ==================== WOUND CARE FORMS ====================
+
+class WoundCareForm(forms.ModelForm):
+    """Form for creating and updating wound assessments"""
+    class Meta:
+        model = WoundCare
+        fields = [
+            'patient', 'wound_type', 'body_part', 'laterality',
+            'length_cm', 'width_cm', 'depth_cm',
+            'appearance', 'exudate', 'exudate_amount', 'pain_level',
+            'has_edema', 'edema_grade', 'signs_of_infection', 'infection_notes',
+            'patient_insurance', 'insurance_covers', 'copay_percentage',
+            'status', 'next_visit_date', 'clinical_notes', 'treatment_plan'
+        ]
+        widgets = {
+            'patient': forms.Select(attrs={'class': 'form-control'}),
+            'wound_type': forms.Select(attrs={'class': 'form-control'}),
+            'body_part': forms.Select(attrs={'class': 'form-control'}),
+            'laterality': forms.Select(attrs={'class': 'form-control'}),
+            'length_cm': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'width_cm': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'depth_cm': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'appearance': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'exudate': forms.Select(attrs={'class': 'form-control'}),
+            'exudate_amount': forms.Select(attrs={'class': 'form-control'}),
+            'pain_level': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '10'}),
+            'edema_grade': forms.Select(attrs={'class': 'form-control'}),
+            'infection_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'patient_insurance': forms.Select(attrs={'class': 'form-control'}),
+            'copay_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'next_visit_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'clinical_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'treatment_plan': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class WoundTreatmentForm(forms.ModelForm):
+    """Form for recording wound treatment procedures"""
+    class Meta:
+        model = WoundTreatment
+        fields = [
+            'treatment_type', 'description', 'materials_used',
+            'pain_after', 'bleeding', 'complications', 'instructions'
+        ]
+        widgets = {
+            'treatment_type': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'materials_used': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'pain_after': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '10'}),
+            'complications': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class WoundFollowUpForm(forms.ModelForm):
+    """Form for follow-up visits"""
+    class Meta:
+        model = WoundFollowUp
+        fields = [
+            'wound_status', 'length_cm', 'width_cm', 'depth_cm',
+            'appearance_notes', 'pain_level', 'signs_of_infection',
+            'treatment_adjusted', 'adjustment_reason', 'next_followup_date', 'notes'
+        ]
+        widgets = {
+            'wound_status': forms.Select(attrs={'class': 'form-control'}),
+            'length_cm': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'width_cm': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'depth_cm': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'appearance_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'pain_level': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '10'}),
+            'adjustment_reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'next_followup_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class WoundBillingForm(forms.ModelForm):
+    """Form for managing wound billing and payments"""
+    class Meta:
+        model = WoundBilling
+        fields = [
+            'assessment_fee', 'treatment_fee', 'dressing_supplies_cost',
+            'medication_cost', 'other_charges', 'insurance_covers',
+            'insurance_amount', 'patient_copay', 'amount_paid',
+            'payment_method', 'payment_date', 'payment_status'
+        ]
+        widgets = {
+            'assessment_fee': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'treatment_fee': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'dressing_supplies_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'medication_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'other_charges': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'insurance_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'patient_copay': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'amount_paid': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'payment_method': forms.Select(attrs={'class': 'form-control'}),
+            'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'payment_status': forms.Select(attrs={'class': 'form-control'}),
+        }

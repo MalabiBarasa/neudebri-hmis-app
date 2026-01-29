@@ -153,3 +153,110 @@ class AssetAdmin(admin.ModelAdmin):
     list_display = ('asset_tag', 'name', 'category', 'current_value', 'location', 'is_active')
     list_filter = ('category', 'is_active')
     search_fields = ('asset_tag', 'name')
+
+
+# ==================== WOUND CARE MANAGEMENT ====================
+
+@admin.register(WoundType)
+class WoundTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'is_active')
+    list_filter = ('category', 'is_active')
+    search_fields = ('name',)
+
+
+@admin.register(BodyPart)
+class BodyPartAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'is_active')
+    list_filter = ('category', 'is_active')
+    search_fields = ('name',)
+
+
+@admin.register(WoundCare)
+class WoundCareAdmin(admin.ModelAdmin):
+    list_display = ('wound_id', 'patient', 'wound_type', 'body_part', 'status', 'assessment_date')
+    list_filter = ('status', 'wound_type', 'assessment_date', 'insurance_covers')
+    search_fields = ('wound_id', 'patient__first_name', 'patient__last_name')
+    readonly_fields = ('wound_id', 'created_at', 'updated_at')
+    fieldsets = (
+        ('Wound Identification', {
+            'fields': ('wound_id', 'patient', 'assessment_date', 'assessed_by')
+        }),
+        ('Wound Details', {
+            'fields': ('wound_type', 'body_part', 'laterality')
+        }),
+        ('Measurements', {
+            'fields': ('length_cm', 'width_cm', 'depth_cm', 'surface_area_cm2'),
+            'classes': ('collapse',)
+        }),
+        ('Clinical Assessment', {
+            'fields': ('appearance', 'exudate', 'exudate_amount', 'pain_level')
+        }),
+        ('Edema & Infection', {
+            'fields': ('has_edema', 'edema_grade', 'signs_of_infection', 'infection_notes'),
+            'classes': ('collapse',)
+        }),
+        ('Insurance & Billing', {
+            'fields': ('patient_insurance', 'insurance_covers', 'copay_percentage'),
+            'classes': ('collapse',)
+        }),
+        ('Status & Follow-up', {
+            'fields': ('status', 'next_visit_date')
+        }),
+        ('Notes', {
+            'fields': ('clinical_notes', 'treatment_plan')
+        }),
+    )
+
+
+@admin.register(WoundTreatment)
+class WoundTreatmentAdmin(admin.ModelAdmin):
+    list_display = ('wound', 'treatment_type', 'treatment_date', 'performed_by', 'bleeding')
+    list_filter = ('treatment_type', 'treatment_date', 'bleeding')
+    search_fields = ('wound__wound_id', 'description')
+    fieldsets = (
+        ('Treatment Record', {
+            'fields': ('wound', 'treatment_date', 'performed_by', 'treatment_type')
+        }),
+        ('Details', {
+            'fields': ('description', 'materials_used')
+        }),
+        ('Post-Treatment', {
+            'fields': ('pain_after', 'bleeding', 'complications')
+        }),
+        ('Patient Instructions', {
+            'fields': ('instructions',)
+        }),
+    )
+
+
+@admin.register(WoundBilling)
+class WoundBillingAdmin(admin.ModelAdmin):
+    list_display = ('wound', 'total_amount', 'amount_paid', 'balance', 'payment_status')
+    list_filter = ('payment_status', 'payment_method', 'billing_date')
+    search_fields = ('wound__wound_id', 'wound__patient__first_name')
+    readonly_fields = ('total_amount', 'balance', 'created_at', 'updated_at')
+
+
+@admin.register(WoundFollowUp)
+class WoundFollowUpAdmin(admin.ModelAdmin):
+    list_display = ('wound', 'followup_date', 'conducted_by', 'wound_status')
+    list_filter = ('wound_status', 'followup_date')
+    search_fields = ('wound__wound_id',)
+    fieldsets = (
+        ('Follow-up Record', {
+            'fields': ('wound', 'followup_date', 'conducted_by', 'wound_status')
+        }),
+        ('Measurements', {
+            'fields': ('length_cm', 'width_cm', 'depth_cm'),
+            'classes': ('collapse',)
+        }),
+        ('Assessment', {
+            'fields': ('appearance_notes', 'pain_level', 'signs_of_infection')
+        }),
+        ('Treatment', {
+            'fields': ('treatment_adjusted', 'adjustment_reason')
+        }),
+        ('Next Steps', {
+            'fields': ('next_followup_date', 'notes')
+        }),
+    )

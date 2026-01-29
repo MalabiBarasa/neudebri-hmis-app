@@ -1,0 +1,267 @@
+{% extends "index.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-bandage"></i> Wound Case #{{ wound.wound_id }}</h2>
+            <p class="text-muted">
+                Patient: <strong>{{ wound.patient.full_name }}</strong> | 
+                Type: <strong>{{ wound.wound_type }}</strong> | 
+                Status: 
+                {% if wound.status == 'active' %}
+                    <span class="badge bg-danger">Active</span>
+                {% elif wound.status == 'pending' %}
+                    <span class="badge bg-warning">Pending</span>
+                {% else %}
+                    <span class="badge bg-info">{{ wound.get_status_display }}</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'wound_update' wound.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'wound_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column - Wound Details -->
+        <div class="col-lg-8">
+            <!-- Assessment Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-stethoscope"></i> Assessment Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Wound Location</h6>
+                            <p>
+                                <strong>Body Part:</strong> {{ wound.body_part }}<br>
+                                <strong>Laterality:</strong> {{ wound.get_laterality_display|default:"N/A" }}<br>
+                                <strong>Type:</strong> {{ wound.wound_type }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Measurements</h6>
+                            <p>
+                                <strong>Length:</strong> {{ wound.length_cm|default:"N/A" }} cm<br>
+                                <strong>Width:</strong> {{ wound.width_cm|default:"N/A" }} cm<br>
+                                <strong>Depth:</strong> {{ wound.depth_cm|default:"N/A" }} cm<br>
+                                <strong>Surface Area:</strong> {{ wound.surface_area_cm2|default:"N/A" }} cm²
+                            </p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Appearance & Exudate</h6>
+                            <p>
+                                <strong>Appearance:</strong><br>
+                                <small>{{ wound.appearance|truncatewords:20 }}</small><br><br>
+                                <strong>Exudate:</strong> {{ wound.get_exudate_display|default:"None" }}<br>
+                                <strong>Amount:</strong> {{ wound.get_exudate_amount_display|default:"N/A" }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Pain & Edema</h6>
+                            <p>
+                                <strong>Pain Level:</strong> 
+                                <span class="badge bg-{% if wound.pain_level <= 3 %}success{% elif wound.pain_level <= 6 %}warning{% else %}danger{% endif %}">
+                                    {{ wound.pain_level }}/10
+                                </span><br>
+                                <strong>Edema:</strong> {% if wound.has_edema %}Yes - {{ wound.get_edema_grade_display }}{% else %}No{% endif %}<br>
+                                <strong>Infection Signs:</strong> {% if wound.signs_of_infection %}<span class="badge bg-danger">Yes</span>{% else %}<span class="badge bg-success">No</span>{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treatment History -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-history"></i> Treatment History</h5>
+                        <a href="{% url 'wound_treatment_create' wound.id %}" class="btn btn-sm btn-light">
+                            <i class="fas fa-plus"></i> Add Treatment
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if treatments %}
+                        <div class="timeline">
+                            {% for treatment in treatments %}
+                                <div class="timeline-item mb-3 pb-3 border-bottom">
+                                    <small class="text-muted">{{ treatment.treatment_date|date:"M d, Y H:i" }}</small>
+                                    <h6 class="fw-bold">{{ treatment.get_treatment_type_display }}</h6>
+                                    <p class="mb-2">{{ treatment.description|truncatewords:30 }}</p>
+                                    <small>
+                                        <strong>By:</strong> {{ treatment.performed_by.get_full_name }}<br>
+                                        <strong>Pain After:</strong> {{ treatment.pain_after }}/10 |
+                                        <strong>Bleeding:</strong> {% if treatment.bleeding %}Yes{% else %}No{% endif %}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">
+                            <i class="fas fa-inbox"></i> No treatments recorded yet
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Follow-ups -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Follow-up Visits</h5>
+                        <a href="{% url 'wound_followup_create' wound.id %}" class="btn btn-sm btn-light">
+                            <i class="fas fa-plus"></i> Add Follow-up
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if follow_ups %}
+                        <div class="timeline">
+                            {% for followup in follow_ups %}
+                                <div class="timeline-item mb-3 pb-3 border-bottom">
+                                    <small class="text-muted">{{ followup.followup_date|date:"M d, Y H:i" }}</small>
+                                    <h6 class="fw-bold">{{ followup.get_wound_status_display }}</h6>
+                                    <p class="mb-2">{{ followup.appearance_notes|truncatewords:30 }}</p>
+                                    <small>
+                                        <strong>By:</strong> {{ followup.conducted_by.get_full_name }}<br>
+                                        <strong>Pain:</strong> {{ followup.pain_level }}/10 |
+                                        <strong>Infection:</strong> {% if followup.signs_of_infection %}Yes{% else %}No{% endif %}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">
+                            <i class="fas fa-inbox"></i> No follow-ups recorded yet
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Billing & Status -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-circle-info"></i> Status</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Current Status:</strong><br>
+                        {% if wound.status == 'active' %}
+                            <span class="badge bg-danger p-2">Active Case</span>
+                        {% else %}
+                            <span class="badge bg-info p-2">{{ wound.get_status_display }}</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Next Visit:</strong><br>
+                        {{ wound.next_visit_date|date:"M d, Y"|default:"Not scheduled" }}
+                    </p>
+                    <p><strong>Last Assessment:</strong><br>
+                        {{ wound.assessment_date|date:"M d, Y H:i" }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Insurance Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Insurance</h5>
+                </div>
+                <div class="card-body">
+                    {% if wound.patient_insurance %}
+                        <p>
+                            <strong>Provider:</strong> {{ wound.patient_insurance.name }}<br>
+                            <strong>Coverage:</strong>
+                            {% if wound.insurance_covers %}
+                                <span class="badge bg-success">Covered</span><br>
+                                <strong>Patient Copay:</strong> {{ wound.copay_percentage }}%
+                            {% else %}
+                                <span class="badge bg-danger">Not Covered</span>
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <p class="text-muted">No insurance on file</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Billing Card -->
+            {% if billing %}
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-receipt"></i> Billing</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            <strong>Total Amount:</strong><br>
+                            <h4 class="text-primary">{{ billing.total_amount }}</h4>
+                            <strong>Paid:</strong> {{ billing.amount_paid }}<br>
+                            <strong>Balance:</strong> <span class="text-danger">{{ billing.balance }}</span><br>
+                            <strong>Status:</strong>
+                            {% if billing.payment_status == 'paid' %}
+                                <span class="badge bg-success">Paid</span>
+                            {% elif billing.payment_status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ billing.get_payment_status_display }}</span>
+                            {% endif %}
+                        </p>
+                        <a href="{% url 'wound_billing' wound.id %}" class="btn btn-sm btn-primary w-100">
+                            <i class="fas fa-edit"></i> Manage Billing
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Notes Card -->
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt"></i> Clinical Notes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Assessment Notes</h6>
+                        <small>{{ wound.clinical_notes|default:"No notes" }}</small>
+                    </div>
+                    <div>
+                        <h6>Treatment Plan</h6>
+                        <small>{{ wound.treatment_plan|default:"No plan" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-item {
+        padding-left: 0;
+    }
+    .timeline-item::before {
+        content: "";
+        position: relative;
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background: #0d6efd;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}

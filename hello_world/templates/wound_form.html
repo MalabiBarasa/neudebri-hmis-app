@@ -1,0 +1,182 @@
+{% extends "index.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-bandage"></i> {{ title }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Patient & Assessment Info -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Patient</strong></label>
+                                {{ form.patient }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Wound Type</strong></label>
+                                {{ form.wound_type }}
+                            </div>
+                        </div>
+
+                        <!-- Wound Location -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Body Part</strong></label>
+                                {{ form.body_part }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Laterality</strong></label>
+                                {{ form.laterality }}
+                            </div>
+                        </div>
+
+                        <!-- Measurements -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-ruler"></i> Wound Measurements</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label"><strong>Length (cm)</strong></label>
+                                {{ form.length_cm }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label"><strong>Width (cm)</strong></label>
+                                {{ form.width_cm }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label"><strong>Depth (cm)</strong></label>
+                                {{ form.depth_cm }}
+                            </div>
+                        </div>
+
+                        <!-- Clinical Assessment -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-heartbeat"></i> Clinical Assessment</h5>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label"><strong>Appearance</strong></label>
+                                {{ form.appearance }}
+                                <small class="form-text text-muted">Describe wound color, tissue type, odor, etc.</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Exudate Type</strong></label>
+                                {{ form.exudate }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Exudate Amount</strong></label>
+                                {{ form.exudate_amount }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label"><strong>Pain Level (0-10)</strong></label>
+                                {{ form.pain_level }}
+                            </div>
+                        </div>
+
+                        <!-- Edema & Infection -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.has_edema }}
+                                    <label class="form-check-label" for="{{ form.has_edema.id_for_label }}">
+                                        <strong>Has Edema</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.signs_of_infection }}
+                                    <label class="form-check-label" for="{{ form.signs_of_infection.id_for_label }}">
+                                        <strong>Signs of Infection</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Edema Grade</strong></label>
+                                {{ form.edema_grade }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Infection Notes</strong></label>
+                                {{ form.infection_notes }}
+                            </div>
+                        </div>
+
+                        <!-- Insurance & Billing -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-shield-alt"></i> Insurance & Billing</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Insurance Provider</strong></label>
+                                {{ form.patient_insurance }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.insurance_covers }}
+                                    <label class="form-check-label" for="{{ form.insurance_covers.id_for_label }}">
+                                        <strong>Insurance Covers This Case</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Patient Copay %</strong></label>
+                                {{ form.copay_percentage }}
+                            </div>
+                        </div>
+
+                        <!-- Status & Follow-up -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-tasks"></i> Status & Follow-up</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Case Status</strong></label>
+                                {{ form.status }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><strong>Next Visit Date</strong></label>
+                                {{ form.next_visit_date }}
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <hr>
+                        <h5 class="mb-3"><i class="fas fa-file-alt"></i> Clinical Notes</h5>
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Clinical Notes</strong></label>
+                            {{ form.clinical_notes }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Treatment Plan</strong></label>
+                            {{ form.treatment_plan }}
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Save Wound Case
+                            </button>
+                            <a href="{% url 'wound_list' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
