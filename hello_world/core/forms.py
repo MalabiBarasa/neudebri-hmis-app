@@ -229,3 +229,34 @@ class WoundBillingForm(forms.ModelForm):
             'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'payment_status': forms.Select(attrs={'class': 'form-control'}),
         }
+
+class PaymentTransactionForm(forms.ModelForm):
+    """Form for recording payment transactions"""
+    class Meta:
+        model = PaymentTransaction
+        fields = [
+            'amount', 'payment_method', 'receipt_number', 'notes'
+        ]
+        widgets = {
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'payment_method': forms.Select(attrs={'class': 'form-control'}),
+            'receipt_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional receipt/reference number'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class InsuranceClaimForm(forms.ModelForm):
+    """Form for managing insurance claims"""
+    class Meta:
+        model = InsuranceClaim
+        fields = [
+            'claim_amount', 'insurance_provider', 'medical_scheme',
+            'submission_notes', 'claim_documents'
+        ]
+        widgets = {
+            'claim_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'insurance_provider': forms.Select(attrs={'class': 'form-control'}),
+            'medical_scheme': forms.Select(attrs={'class': 'form-control'}),
+            'submission_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'claim_documents': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'List documents: receipt.pdf, prescription.pdf, etc.'}),
+        }

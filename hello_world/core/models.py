@@ -743,3 +743,98 @@ class WoundFollowUp(models.Model):
 
     def __str__(self):
         return f"Follow-up - {self.wound.wound_id} ({self.followup_date.date()})"
+
+
+class PaymentTransaction(models.Model):
+    """Track individual payment transactions for wound billing"""
+    TRANSACTION_STATUS = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    billing = models.ForeignKey(WoundBilling, on_delete=models.CASCADE, related_name='transactions')
+    transaction_ref = models.CharField(max_length=50, unique=True)
+    
+    # Payment Details
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=50, choices=[
+        ('cash', 'Cash'),
+        ('card', 'Card'),
+        ('check', 'Check'),
+        ('mobile_money', 'Mobile Money (M-Pesa)'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('insurance_claim', 'Insurance Claim'),
+    ])
+    
+    # Transaction Status
+    status = models.CharField(max_length=20, choices=TRANSACTION_STATUS, default='completed')
+    transaction_date = models.DateTimeField(default=timezone.now)
+    
+    # Additional Info
+    receipt_number = models.CharField(max_length=50, blank=True)
+    notes = models.TextField(blank=True)
+    processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-transaction_date']
+        indexes = [
+            models.Index(fields=['billing', 'transaction_date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.transaction_ref} - {self.amount} ({self.get_payment_method_display()})"
+
+
+class InsuranceClaim(models.Model):
+    """Track insurance claims for wound care services"""
+    CLAIM_STATUS = [
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('under_review', 'Under Review'),
+        ('approved', 'Approved'),
+        ('approved_partial', 'Approved - Partial'),
+        ('rejected', 'Rejected'),
+        ('paid', 'Paid'),
+    ]
+    
+    billing = models.OneToOneField(WoundBilling, on_delete=models.CASCADE, related_name='insurance_claim')
+    claim_number = models.CharField(max_length=50, unique=True)
+    
+    # Claim Details
+    submitted_date = models.DateTimeField(blank=True, null=True)
+    claim_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    insurance_provider = models.ForeignKey(InsuranceProvider, on_delete=models.SET_NULL, null=True)
+    medical_scheme = models.ForeignKey(MedicalScheme, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Approval Details
+    approval_date = models.DateTimeField(blank=True, null=True)
+    approved_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    approval_notes = models.TextField(blank=True)
+    claim_status = models.CharField(max_length=20, choices=CLAIM_STATUS, default='draft')
+    
+    # Payment
+    paid_date = models.DateTimeField(blank=True, null=True)
+    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Documents & Notes
+    claim_documents = models.TextField(blank=True, help_text="List of attached documents")
+    submission_notes = models.TextField(blank=True)
+    
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-submitted_date']
+        indexes = [
+            models.Index(fields=['insurance_provider', 'claim_status']),
+        ]
+    
+    def __str__(self):
+        return f"Claim #{self.claim_number} - {self.billing.wound.wound_id} ({self.get_claim_status_display()})"
