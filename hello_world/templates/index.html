@@ -73,7 +73,7 @@
         </div>
     </nav>
 
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated or show_content_always %}
         <div class="container mt-4">
             {% if messages %}
                 {% for message in messages %}
@@ -85,7 +85,7 @@
             {% endif %}
             {% block content %}{% endblock %}
         </div>
-    {% else %}
+    {% elif not show_content_always %}
         <div class="hero-section">
             <h1>Neudebri Woundcare Hospital</h1>
             <p>Advanced Hospital Management Information System (HMIS)</p>
