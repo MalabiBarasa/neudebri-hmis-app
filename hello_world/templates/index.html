@@ -49,6 +49,8 @@
                             <ul class="dropdown-menu"><li><a class="dropdown-item" href="{% url 'prescription_list' %}">Prescriptions</a></li><li><a class="dropdown-item" href="{% url 'prescription_create' %}">New</a></li></ul></li>
                         <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><i class="fas fa-stethoscope"></i> Clinical</a>
                             <ul class="dropdown-menu"><li><a class="dropdown-item" href="{% url 'outpatient_visit_list' %}">Visits</a></li><li><hr></li><li><a class="dropdown-item" href="{% url 'vital_signs_list' %}">Vitals</a></li></ul></li>
+                        <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><i class="fas fa-bandage"></i> Wound Care</a>
+                            <ul class="dropdown-menu"><li><a class="dropdown-item" href="{% url 'wound_list' %}">Cases</a></li><li><a class="dropdown-item" href="{% url 'wound_create' %}">New Case</a></li><li><a class="dropdown-item" href="{% url 'wound_dashboard' %}">Dashboard</a></li></ul></li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">

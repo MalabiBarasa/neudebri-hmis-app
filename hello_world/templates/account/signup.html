@@ -1,0 +1,200 @@
+{% extends "index.html" %}
+{% load account %}
+
+{% block title %}Sign Up | Neudebri HMIS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-4 mb-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #0066cc 0%, #004fa3 100%); padding: 30px; border-radius: 15px 15px 0 0; text-align: center; color: white;">
+                    <i class="fas fa-hospital" style="font-size: 2.5rem; margin-bottom: 15px;"></i>
+                    <h2 class="mb-0">Neudebri HMIS</h2>
+                    <p class="mb-0 mt-2">Professional Hospital Management</p>
+                </div>
+
+                <!-- Form -->
+                <div class="card-body p-5">
+                    <h4 class="mb-4 text-center"><i class="fas fa-user-plus"></i> Create Staff Account</h4>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> <strong>Registration Error</strong>
+                            {% for error in form.non_field_errors %}
+                                <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>{{ form.email.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.email.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>{{ form.username.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.username.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted d-block mt-1">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</small>
+                        </div>
+
+                        <!-- First Name -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>{{ form.first_name.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user-circle"></i></span>
+                                {{ form.first_name }}
+                            </div>
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.first_name.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>{{ form.last_name.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user-circle"></i></span>
+                                {{ form.last_name }}
+                            </div>
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.last_name.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>{{ form.password1.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                {{ form.password1 }}
+                            </div>
+                            {% if form.password1.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.password1.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted d-block mt-1">
+                                <i class="fas fa-info-circle"></i>
+                                Your password can't be too similar to your other personal information.
+                                Your password must contain at least 8 characters.
+                                Your password can't be a commonly used password.
+                            </small>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>{{ form.password2.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                {{ form.password2 }}
+                            </div>
+                            {% if form.password2.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.password2.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-3" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); border: none;">
+                            <i class="fas fa-user-check"></i> Create Account
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="text-center my-4">
+                        <small class="text-muted">Already have an account?</small>
+                    </div>
+
+                    <!-- Login Link -->
+                    <a href="{% url 'account_login' %}" class="btn btn-outline-primary btn-lg w-100">
+                        <i class="fas fa-sign-in-alt"></i> Sign In Instead
+                    </a>
+                </div>
+
+                <!-- Footer -->
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 0 0 15px 15px; text-align: center; border-top: 1px solid #dee2e6;">
+                    <small class="text-muted">
+                        <i class="fas fa-lock"></i> Secure Registration | Neudebri Hospital
+                    </small>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="mt-5 mb-5">
+                <div class="alert alert-warning border-0" style="border-radius: 10px; background-color: #fff3cd;">
+                    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Staff Registration</h6>
+                    <hr class="my-2">
+                    <p class="mb-0 small">This account creation is for hospital staff members only. If you don't have authorization to create an account, please contact your system administrator.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .input-group-text {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 10px 12px;
+    }
+    .form-control:focus {
+        border-color: #0066cc;
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    }
+    .form-control {
+        padding: 10px 12px;
+        font-size: 1rem;
+    }
+    .btn-success:hover {
+        background: linear-gradient(135deg, #218838 0%, #1e7e34 100%) !important;
+    }
+    .input-group-text {
+        background-color: white;
+        color: #0066cc;
+    }
+    .card {
+        border-radius: 15px;
+    }
+</style>
+{% endblock %}

@@ -67,4 +67,26 @@
         </div>
     </div>
 </div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-bandage" style="color: #ff6b6b;"></i> Wound Care</h5>
+                <p class="card-text">Manage wound cases</p>
+                <a href="{% url 'wound_list' %}" class="btn btn-sm btn-danger">View Cases</a>
+                <a href="{% url 'wound_create' %}" class="btn btn-sm btn-outline-danger">New Case</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-chart-bar" style="color: #4ecdc4;"></i> Wound Analytics</h5>
+                <p class="card-text">Wound care dashboard</p>
+                <a href="{% url 'wound_dashboard' %}" class="btn btn-sm btn-info">View Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

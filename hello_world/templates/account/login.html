@@ -1,0 +1,149 @@
+{% extends "index.html" %}
+{% load account %}
+
+{% block title %}Login | Neudebri HMIS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-5">
+            <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #0066cc 0%, #004fa3 100%); padding: 30px; border-radius: 15px 15px 0 0; text-align: center; color: white;">
+                    <i class="fas fa-hospital" style="font-size: 2.5rem; margin-bottom: 15px;"></i>
+                    <h2 class="mb-0">Neudebri HMIS</h2>
+                    <p class="mb-0 mt-2">Professional Hospital Management</p>
+                </div>
+
+                <!-- Form -->
+                <div class="card-body p-5">
+                    <h4 class="mb-4 text-center"><i class="fas fa-sign-in-alt"></i> Staff Login</h4>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> <strong>Login Error</strong>
+                            {% for error in form.non_field_errors %}
+                                <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Username/Email -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>{{ form.login.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                {{ form.login }}
+                            </div>
+                            {% if form.login.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.login.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted d-block mt-2">Enter username or email address</small>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>{{ form.password.label }}</strong></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                {{ form.password }}
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.password.errors %}
+                                        <i class="fas fa-times-circle"></i> {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Remember Me -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="remember_me" name="remember" checked>
+                            <label class="form-check-label" for="remember_me">
+                                Keep me logged in
+                            </label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" style="background: linear-gradient(135deg, #0066cc 0%, #004fa3 100%); border: none;">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="text-center my-4">
+                        <small class="text-muted">New to the system?</small>
+                    </div>
+
+                    <!-- Sign Up Link -->
+                    <a href="{% url 'account_signup' %}" class="btn btn-outline-primary btn-lg w-100">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </a>
+
+                    <!-- Help Links -->
+                    <div class="text-center mt-4">
+                        <a href="{% url 'account_reset_password' %}" class="text-decoration-none small">
+                            <i class="fas fa-key"></i> Forgot Password?
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 0 0 15px 15px; text-align: center; border-top: 1px solid #dee2e6;">
+                    <small class="text-muted">
+                        <i class="fas fa-lock"></i> Secure Login | Neudebri Hospital
+                    </small>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="row mt-5 mb-5">
+                <div class="col-12">
+                    <div class="alert alert-info border-0" style="border-radius: 10px; background-color: #e3f2fd;">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Demo Credentials</h6>
+                        <hr class="my-2">
+                        <p class="mb-1"><strong>Username:</strong> <code>admin</code> or <code>doctor1</code></p>
+                        <p class="mb-1"><strong>Password:</strong> <code>admin1234</code> or <code>doctor1</code></p>
+                        <small class="text-muted">Contact administrator for your personal login</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .input-group-text {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 10px 12px;
+    }
+    .form-control:focus {
+        border-color: #0066cc;
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    }
+    .form-control {
+        padding: 10px 12px;
+        font-size: 1rem;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #004fa3 0%, #003d82 100%) !important;
+    }
+    .input-group-text {
+        background-color: white;
+        color: #0066cc;
+    }
+    .card {
+        border-radius: 15px;
+    }
+</style>
+{% endblock %}
