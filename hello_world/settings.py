@@ -301,7 +301,5 @@ else:
             'hosts': 'http://localhost:9200'  # Will fail gracefully
         },
     }
-    },
-}
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
