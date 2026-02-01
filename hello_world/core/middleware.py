@@ -15,7 +15,12 @@ class RBACMiddleware(MiddlewareMixin):
         if not request.user.is_authenticated:
             return None
 
-        if not hasattr(request.user, 'userprofile'):
+        # Check if user has a profile - if not, skip permission checks
+        try:
+            if not hasattr(request.user, 'userprofile') or request.user.userprofile is None:
+                return None
+        except:
+            # If there's any issue accessing userprofile, skip permission checks
             return None
 
         # Get the URL name
@@ -80,21 +85,26 @@ class SecurityMiddleware(MiddlewareMixin):
         """
         Process incoming requests for security checks
         """
-        if request.user.is_authenticated and hasattr(request.user, 'userprofile'):
-            profile = request.user.userprofile
+        if request.user.is_authenticated:
+            try:
+                if hasattr(request.user, 'userprofile') and request.user.userprofile is not None:
+                    profile = request.user.userprofile
 
-            # Check for expired lockouts
-            profile.has_expired_lockout
+                    # Check for expired lockouts
+                    profile.has_expired_lockout
 
-            # Record IP address for security
-            if not profile.last_login_ip:
-                x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-                if x_forwarded_for:
-                    ip = x_forwarded_for.split(',')[0]
-                else:
-                    ip = request.META.get('REMOTE_ADDR')
-                profile.last_login_ip = ip
-                profile.save(update_fields=['last_login_ip'])
+                    # Record IP address for security
+                    if not profile.last_login_ip:
+                        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                        if x_forwarded_for:
+                            ip = x_forwarded_for.split(',')[0]
+                        else:
+                            ip = request.META.get('REMOTE_ADDR')
+                        profile.last_login_ip = ip
+                        profile.save(update_fields=['last_login_ip'])
+            except Exception:
+                # If there's any issue with userprofile, skip security checks
+                pass
 
         return None
 

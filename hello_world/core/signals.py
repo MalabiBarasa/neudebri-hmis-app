@@ -2,11 +2,30 @@
 Signals for the core app
 """
 import logging
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """
+    Create UserProfile for new users
+    """
+    if created:
+        try:
+            from .models import UserProfile
+            UserProfile.objects.get_or_create(
+                user=instance,
+                defaults={
+                    'role': 'guest',  # Default role for new users
+                }
+            )
+            logger.info(f"Created UserProfile for user: {instance.username}")
+        except Exception as e:
+            logger.error(f"Failed to create UserProfile for {instance.username}: {e}")
 
 
 @receiver(post_migrate)
