@@ -69,6 +69,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # For serving static files in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -265,19 +266,41 @@ EMAIL_HOST_PASSWORD = 'your-app-password'
 
 # Channels Configuration (for WebSockets if needed)
 ASGI_APPLICATION = 'hello_world.asgi.application'
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+
+# Redis URL for channels (use environment variable or fallback)
+REDIS_URL = config("REDIS_URL", default=None)
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [REDIS_URL],
+            },
         },
-    },
-}
+    }
+else:
+    # Fallback for development or when Redis is not available
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 # Elasticsearch Configuration
-ELASTICSEARCH_DSL = {
-    'default': {
-        'hosts': 'http://localhost:9200'
+ELASTICSEARCH_URL = config("ELASTICSEARCH_URL", default=None)
+if ELASTICSEARCH_URL:
+    ELASTICSEARCH_DSL = {
+        'default': {
+            'hosts': ELASTICSEARCH_URL
+        },
+    }
+else:
+    # Disable Elasticsearch in production if not configured
+    ELASTICSEARCH_DSL = {
+        'default': {
+            'hosts': 'http://localhost:9200'  # Will fail gracefully
+        },
+    }
     },
 }
 
