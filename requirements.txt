@@ -22,6 +22,8 @@ channels~=4.1.0
 # django-elasticsearch-dsl~=8.0.0  # Optional - uncomment if Elasticsearch is available
 plotly~=5.18.0
 redis~=5.0.0
+openpyxl~=3.1.0
+reportlab~=4.0.0
 # elasticsearch~=8.11.0  # Optional - uncomment if Elasticsearch is available
 
 # Production dependencies
