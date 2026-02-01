@@ -40,6 +40,15 @@ if 'CODESPACE_NAME' in os.environ:
 
 # Application definition
 
+# Conditionally include elasticsearch app only if available
+try:
+    import elasticsearch
+    import elasticsearch_dsl
+    HAS_ELASTICSEARCH = True
+except ImportError:
+    HAS_ELASTICSEARCH = False
+
+# Build INSTALLED_APPS conditionally
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -59,13 +68,21 @@ INSTALLED_APPS = [
     "django_otp",
     "django_otp.plugins.otp_totp",
     "channels",
-    "django_elasticsearch_dsl",
+]
+
+# Only add elasticsearch apps if available
+if HAS_ELASTICSEARCH:
+    INSTALLED_APPS.append("django_elasticsearch_dsl")
+else:
+    print("WARNING: Elasticsearch not available, search functionality disabled")
+
+INSTALLED_APPS.extend([
     "django_tables2",
     "django_filters",
     "allauth",
     "allauth.account",
     "hello_world.core",
-]
+])
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -286,20 +303,24 @@ else:
         },
     }
 
-# Elasticsearch Configuration
-ELASTICSEARCH_URL = config("ELASTICSEARCH_URL", default=None)
-if ELASTICSEARCH_URL:
-    ELASTICSEARCH_DSL = {
-        'default': {
-            'hosts': ELASTICSEARCH_URL
-        },
-    }
+# Elasticsearch Configuration (only if available)
+if HAS_ELASTICSEARCH:
+    ELASTICSEARCH_URL = config("ELASTICSEARCH_URL", default=None)
+    if ELASTICSEARCH_URL:
+        ELASTICSEARCH_DSL = {
+            'default': {
+                'hosts': ELASTICSEARCH_URL
+            },
+        }
+    else:
+        # Disable Elasticsearch in production if not configured
+        ELASTICSEARCH_DSL = {
+            'default': {
+                'hosts': 'http://localhost:9200'  # Will fail gracefully
+            },
+        }
 else:
-    # Disable Elasticsearch in production if not configured
-    ELASTICSEARCH_DSL = {
-        'default': {
-            'hosts': 'http://localhost:9200'  # Will fail gracefully
-        },
-    }
+    # No elasticsearch available
+    ELASTICSEARCH_DSL = None
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
