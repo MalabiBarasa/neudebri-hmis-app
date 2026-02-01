@@ -46,9 +46,9 @@ class MedicalScheme(models.Model):
         return f"{self.name} ({self.insurance_provider.name})"
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
-    role = models.CharField(max_length=50, choices=[
+    # Role-based access control choices
+    ROLE_CHOICES = [
+        ('super_admin', 'Super Administrator'),
         ('admin', 'System Administrator'),
         ('doctor', 'Doctor'),
         ('nurse', 'Nurse'),
@@ -59,15 +59,226 @@ class UserProfile(models.Model):
         ('radiologist', 'Radiologist'),
         ('hr_manager', 'HR Manager'),
         ('accountant', 'Accountant'),
-    ])
+        ('it_support', 'IT Support'),
+        ('guest', 'Guest/Read-Only'),
+    ]
+
+    # Permission groups for granular access control
+    PERMISSION_GROUPS = {
+        'patient_management': [
+            'view_patient', 'add_patient', 'change_patient', 'delete_patient',
+            'view_medical_history', 'add_medical_record', 'emergency_access'
+        ],
+        'appointment_management': [
+            'view_appointment', 'add_appointment', 'change_appointment',
+            'cancel_appointment', 'view_schedule', 'manage_schedule'
+        ],
+        'wound_care': [
+            'view_wound_case', 'add_wound_case', 'change_wound_case',
+            'treat_wound', 'view_treatment_history', 'manage_wound_billing'
+        ],
+        'billing_financial': [
+            'view_invoice', 'create_invoice', 'modify_invoice', 'void_invoice',
+            'process_payment', 'view_financial_reports', 'manage_insurance'
+        ],
+        'laboratory': [
+            'view_lab_request', 'create_lab_request', 'process_lab_results',
+            'view_lab_reports', 'manage_lab_inventory'
+        ],
+        'pharmacy': [
+            'view_prescription', 'create_prescription', 'dispense_medication',
+            'view_pharmacy_inventory', 'manage_drug_inventory'
+        ],
+        'radiology': [
+            'view_radiology_request', 'create_radiology_request',
+            'process_radiology_results', 'view_imaging_reports'
+        ],
+        'system_administration': [
+            'manage_users', 'manage_roles', 'system_configuration',
+            'view_audit_logs', 'backup_system', 'restore_system'
+        ],
+        'reporting_analytics': [
+            'view_basic_reports', 'view_advanced_reports', 'export_data',
+            'view_analytics_dashboard', 'create_custom_reports'
+        ]
+    }
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Basic role information
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='guest')
     employee_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True)
     specialization = models.CharField(max_length=100, blank=True)  # For doctors
     license_number = models.CharField(max_length=50, blank=True)
     date_joined = models.DateField(default=timezone.now)
 
+    # Advanced permissions (JSON field for granular permissions)
+    custom_permissions = models.JSONField(default=dict, blank=True, help_text="Additional custom permissions")
+
+    # Security settings
+    two_factor_enabled = models.BooleanField(default=False)
+    last_login_ip = models.GenericIPAddressField(blank=True, null=True)
+    login_attempts = models.IntegerField(default=0)
+    account_locked = models.BooleanField(default=False)
+    lockout_until = models.DateTimeField(blank=True, null=True)
+
+    # Facility/Clinic assignment (for multi-facility support)
+    assigned_facility = models.ForeignKey('Clinic', on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Working hours and availability
+    working_hours_start = models.TimeField(default='08:00:00')
+    working_hours_end = models.TimeField(default='17:00:00')
+    is_on_duty = models.BooleanField(default=False)
+
+    class Meta:
+        permissions = [
+            # Patient management
+            ("view_patient", "Can view patient records"),
+            ("add_patient", "Can add new patients"),
+            ("change_patient", "Can modify patient records"),
+            ("delete_patient", "Can delete patient records"),
+            ("view_medical_history", "Can view patient medical history"),
+            ("add_medical_record", "Can add medical records"),
+            ("emergency_access", "Can access emergency patient data"),
+
+            # Appointments
+            ("view_appointment", "Can view appointments"),
+            ("add_appointment", "Can create appointments"),
+            ("change_appointment", "Can modify appointments"),
+            ("cancel_appointment", "Can cancel appointments"),
+            ("view_schedule", "Can view staff schedules"),
+            ("manage_schedule", "Can manage staff schedules"),
+
+            # Wound care
+            ("view_wound_case", "Can view wound cases"),
+            ("add_wound_case", "Can create wound cases"),
+            ("change_wound_case", "Can modify wound cases"),
+            ("treat_wound", "Can perform wound treatments"),
+            ("view_treatment_history", "Can view treatment history"),
+            ("manage_wound_billing", "Can manage wound billing"),
+
+            # Financial
+            ("view_invoice", "Can view invoices"),
+            ("create_invoice", "Can create invoices"),
+            ("modify_invoice", "Can modify invoices"),
+            ("void_invoice", "Can void invoices"),
+            ("process_payment", "Can process payments"),
+            ("view_financial_reports", "Can view financial reports"),
+            ("manage_insurance", "Can manage insurance claims"),
+
+            # Laboratory
+            ("view_lab_request", "Can view lab requests"),
+            ("create_lab_request", "Can create lab requests"),
+            ("process_lab_results", "Can process lab results"),
+            ("view_lab_reports", "Can view lab reports"),
+            ("manage_lab_inventory", "Can manage lab inventory"),
+
+            # Pharmacy
+            ("view_prescription", "Can view prescriptions"),
+            ("create_prescription", "Can create prescriptions"),
+            ("dispense_medication", "Can dispense medication"),
+            ("view_pharmacy_inventory", "Can view pharmacy inventory"),
+            ("manage_drug_inventory", "Can manage drug inventory"),
+
+            # Radiology
+            ("view_radiology_request", "Can view radiology requests"),
+            ("create_radiology_request", "Can create radiology requests"),
+            ("process_radiology_results", "Can process radiology results"),
+            ("view_imaging_reports", "Can view imaging reports"),
+
+            # System administration
+            ("manage_users", "Can manage user accounts"),
+            ("manage_roles", "Can manage user roles"),
+            ("system_configuration", "Can configure system settings"),
+            ("view_audit_logs", "Can view audit logs"),
+            ("backup_system", "Can backup system data"),
+            ("restore_system", "Can restore system data"),
+
+            # Reporting
+            ("view_basic_reports", "Can view basic reports"),
+            ("view_advanced_reports", "Can view advanced reports"),
+            ("export_data", "Can export data"),
+            ("view_analytics_dashboard", "Can view analytics dashboard"),
+            ("create_custom_reports", "Can create custom reports"),
+        ]
+
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.get_role_display()}"
+
+    @property
+    def full_name(self):
+        return self.user.get_full_name()
+
+    @property
+    def email(self):
+        return self.user.email
+
+    @property
+    def is_active(self):
+        return self.user.is_active and not self.account_locked
+
+    @property
+    def has_expired_lockout(self):
+        if self.lockout_until and timezone.now() > self.lockout_until:
+            self.account_locked = False
+            self.lockout_until = None
+            self.login_attempts = 0
+            self.save()
+            return True
+        return False
+
+    def get_all_permissions(self):
+        """Get all permissions for this user (role-based + custom)"""
+        permissions = set()
+
+        # Add role-based permissions
+        role_permissions = self.PERMISSION_GROUPS.get(self.role, [])
+        permissions.update(role_permissions)
+
+        # Add custom permissions
+        if self.custom_permissions:
+            for perm_list in self.custom_permissions.values():
+                permissions.update(perm_list)
+
+        return permissions
+
+    def has_permission(self, permission):
+        """Check if user has specific permission"""
+        return permission in self.get_all_permissions()
+
+    def can_access_module(self, module_name):
+        """Check if user can access a specific module"""
+        module_permissions = self.PERMISSION_GROUPS.get(module_name, [])
+        return any(perm in self.get_all_permissions() for perm in module_permissions)
+
+    def record_login_attempt(self, success=False, ip_address=None):
+        """Record login attempt and handle account locking"""
+        if success:
+            self.login_attempts = 0
+            self.last_login_ip = ip_address
+            self.account_locked = False
+            self.lockout_until = None
+        else:
+            self.login_attempts += 1
+            if self.login_attempts >= 5:  # Lock after 5 failed attempts
+                self.account_locked = True
+                self.lockout_until = timezone.now() + timedelta(hours=1)  # Lock for 1 hour
+
+        self.save()
+
+    def get_dashboard_permissions(self):
+        """Get permissions relevant to dashboard access"""
+        return {
+            'can_view_patients': self.has_permission('view_patient'),
+            'can_manage_appointments': self.has_permission('view_appointment'),
+            'can_access_wound_care': self.has_permission('view_wound_case'),
+            'can_manage_billing': self.has_permission('view_invoice'),
+            'can_view_reports': self.has_permission('view_basic_reports'),
+            'can_admin_system': self.has_permission('manage_users'),
+            'can_backup_system': self.has_permission('backup_system'),
+        }
 
 # Patient Register Models
 class Patient(models.Model):
@@ -824,6 +1035,94 @@ class PaymentTransaction(models.Model):
     
     def __str__(self):
         return f"{self.transaction_ref} - KES {self.amount} ({self.get_payment_method_display()})"
+
+
+# ==================== NOTIFICATION SYSTEM ====================
+
+class Notification(models.Model):
+    """
+    Real-time notification system for user alerts and updates
+    """
+    NOTIFICATION_TYPES = [
+        ('info', 'Information'),
+        ('success', 'Success'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+        ('appointment', 'Appointment'),
+        ('wound_care', 'Wound Care'),
+        ('lab_result', 'Lab Result'),
+        ('billing', 'Billing'),
+        ('system', 'System'),
+    ]
+
+    PRIORITY_LEVELS = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+
+    # Recipients
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_notifications')
+
+    # Notification content
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='info')
+    priority = models.CharField(max_length=10, choices=PRIORITY_LEVELS, default='medium')
+
+    # Status and timing
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(blank=True, null=True)
+
+    # Related objects (optional)
+    related_patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True, blank=True)
+    related_appointment = models.ForeignKey('Appointment', on_delete=models.SET_NULL, null=True, blank=True)
+    related_wound = models.ForeignKey('WoundCare', on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Actions
+    action_url = models.URLField(blank=True, help_text="URL to redirect when notification is clicked")
+    action_text = models.CharField(max_length=50, blank=True, help_text="Text for action button")
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', '-created_at']),
+            models.Index(fields=['is_read', 'recipient']),
+            models.Index(fields=['notification_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} - {self.recipient.username}"
+
+    def mark_as_read(self):
+        """Mark notification as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at'])
+
+    def is_expired(self):
+        """Check if notification has expired"""
+        return self.expires_at and timezone.now() > self.expires_at
+
+    @property
+    def time_since_created(self):
+        """Get human-readable time since creation"""
+        now = timezone.now()
+        diff = now - self.created_at
+
+        if diff.days > 0:
+            return f"{diff.days} days ago"
+        elif diff.seconds >= 3600:
+            return f"{diff.seconds // 3600} hours ago"
+        elif diff.seconds >= 60:
+            return f"{diff.seconds // 60} minutes ago"
+        else:
+            return "Just now"
 
 
 class InsuranceClaim(models.Model):

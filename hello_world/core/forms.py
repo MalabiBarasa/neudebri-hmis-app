@@ -48,6 +48,12 @@ class UserRegistrationForm(UserCreationForm):
         return user
 
 class PatientForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter to only show active insurance providers
+        self.fields['insurance_provider'].queryset = InsuranceProvider.objects.filter(is_active=True)
+        self.fields['medical_scheme'].queryset = MedicalScheme.objects.filter(is_active=True)
+    
     class Meta:
         model = Patient
         fields = ['first_name', 'last_name', 'middle_name', 'date_of_birth', 'gender', 'marital_status',
@@ -133,6 +139,15 @@ class InventoryItemForm(forms.ModelForm):
 
 class WoundCareForm(forms.ModelForm):
     """Form for creating and updating wound assessments"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter to only show active records
+        self.fields['patient'].queryset = Patient.objects.filter(is_active=True)
+        self.fields['wound_type'].queryset = WoundType.objects.filter(is_active=True)
+        self.fields['body_part'].queryset = BodyPart.objects.filter(is_active=True)
+        self.fields['patient_insurance'].queryset = InsuranceProvider.objects.filter(is_active=True)
+    
     class Meta:
         model = WoundCare
         fields = [

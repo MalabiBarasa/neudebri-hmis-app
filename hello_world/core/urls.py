@@ -1,8 +1,22 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views, api, export
+
+# REST API Router
+router = DefaultRouter()
+router.register(r'api/patients', api.PatientViewSet)
+router.register(r'api/wounds', api.WoundCareViewSet)
+router.register(r'api/appointments', api.AppointmentViewSet)
+router.register(r'api/prescriptions', api.PrescriptionViewSet)
 
 urlpatterns = [
+    path("", include(router.urls)),
     path("dashboard/", views.dashboard, name="dashboard"),
+    
+    # Export URLs
+    path("export/patients/csv/", export.export_patients_csv, name="export_patients_csv"),
+    path("export/wounds/excel/", export.export_wounds_excel, name="export_wounds_excel"),
+    path("export/wounds/pdf/", export.export_wounds_pdf, name="export_wounds_pdf"),
     # Patient Register
     path("patients/", views.patient_list, name="patient_list"),
     path("patients/create/", views.patient_create, name="patient_create"),
@@ -31,4 +45,11 @@ urlpatterns = [
     path("wounds/<int:wound_id>/treatment/", views.wound_treatment_create, name="wound_treatment_create"),
     path("wounds/<int:wound_id>/followup/", views.wound_followup_create, name="wound_followup_create"),
     path("wounds/<int:wound_id>/billing/", views.wound_billing, name="wound_billing"),
+    
+    # Phase 2 Enhancements
+    path("backup/", views.backup_database, name="backup_database"),
+    path("audit/<str:model_name>/<int:pk>/", views.audit_trail, name="audit_trail"),
+    path("analytics/", views.advanced_analytics, name="advanced_analytics"),
+    path("search/", views.global_search, name="global_search"),
+    path("search/advanced/", views.advanced_search, name="advanced_search"),
 ]

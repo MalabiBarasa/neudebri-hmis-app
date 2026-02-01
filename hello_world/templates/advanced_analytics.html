@@ -1,0 +1,135 @@
+{% extends "index.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"><i class="fas fa-chart-line"></i> {{ title }}</h3>
+                    <small>Interactive analytics dashboard with real-time insights</small>
+                </div>
+                <div class="card-body">
+                    <!-- Chart 1: Wound Progress Timeline -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Wound Care Progress Timeline</h5>
+                                </div>
+                                <div class="card-body">
+                                    {{ chart1|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2 & 3: Side by side -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Wound Types Distribution</h5>
+                                </div>
+                                <div class="card-body">
+                                    {{ chart2|safe }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-pie-chart"></i> Insurance Coverage</h5>
+                                </div>
+                                <div class="card-body">
+                                    {{ chart3|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-download"></i> Export Analytics Data</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <a href="{% url 'export_patients_csv' %}" class="btn btn-outline-primary btn-lg w-100">
+                                                <i class="fas fa-file-csv"></i> Export Patients (CSV)
+                                            </a>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{% url 'export_wounds_excel' %}" class="btn btn-outline-success btn-lg w-100">
+                                                <i class="fas fa-file-excel"></i> Export Wounds (Excel)
+                                            </a>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{% url 'export_wounds_pdf' %}" class="btn btn-outline-danger btn-lg w-100">
+                                                <i class="fas fa-file-pdf"></i> Export Wounds (PDF)
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-tachometer-alt"></i> Quick Statistics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <div class="card bg-primary text-white">
+                                                <div class="card-body">
+                                                    <h4>{{ total_cases|default:0 }}</h4>
+                                                    <small>Total Cases</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-success text-white">
+                                                <div class="card-body">
+                                                    <h4>{{ active_cases|default:0 }}</h4>
+                                                    <small>Active Cases</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-warning text-white">
+                                                <div class="card-body">
+                                                    <h4>{{ resolved_cases|default:0 }}</h4>
+                                                    <small>Resolved Cases</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-info text-white">
+                                                <div class="card-body">
+                                                    <h4>{{ insured_cases|default:0 }}</h4>
+                                                    <small>Insured Cases</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}

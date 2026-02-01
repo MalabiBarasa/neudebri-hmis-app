@@ -1,0 +1,287 @@
+{% extends "index.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-search-plus"></i> Advanced Search</h3>
+                    <small>Advanced search with filters across all medical records</small>
+                </div>
+                <div class="card-body">
+                    <!-- Advanced Search Form -->
+                    <form method="get" class="mb-4">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="q" class="form-label">Search Query</label>
+                                <input type="text" name="q" id="q" class="form-control"
+                                       placeholder="Search for patients, wound cases, appointments..."
+                                       value="{{ query }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="type" class="form-label">Search Type</label>
+                                <select name="type" id="type" class="form-control">
+                                    <option value="all" {% if search_type == 'all' %}selected{% endif %}>All Records</option>
+                                    <option value="patients" {% if search_type == 'patients' %}selected{% endif %}>Patients</option>
+                                    <option value="wound_cases" {% if search_type == 'wound_cases' %}selected{% endif %}>Wound Cases</option>
+                                    <option value="appointments" {% if search_type == 'appointments' %}selected{% endif %}>Appointments</option>
+                                    <option value="prescriptions" {% if search_type == 'prescriptions' %}selected{% endif %}>Prescriptions</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="date_from" class="form-label">Date From</label>
+                                <input type="date" name="date_from" id="date_from" class="form-control"
+                                       value="{{ date_from }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="date_to" class="form-label">Date To</label>
+                                <input type="date" name="date_to" id="date_to" class="form-control"
+                                       value="{{ date_to }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="doctor" class="form-label">Doctor</label>
+                                <select name="doctor" id="doctor" class="form-control">
+                                    <option value="">All Doctors</option>
+                                    {% for doc in doctors %}
+                                        <option value="{{ doc.id }}" {% if doctor == doc.id|stringformat:'s' %}selected{% endif %}>
+                                            {{ doc.get_full_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="clinic" class="form-label">Clinic</label>
+                                <select name="clinic" id="clinic" class="form-control">
+                                    <option value="">All Clinics</option>
+                                    {% for cl in clinics %}
+                                        <option value="{{ cl.id }}" {% if clinic == cl.id|stringformat:'s' %}selected{% endif %}>
+                                            {{ cl.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+                                    <i class="fas fa-times"></i> Clear Filters
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if query or date_from or date_to or doctor or clinic %}
+                        <!-- Search Results -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h4 class="mb-3">
+                                    Advanced Search Results
+                                    <span class="badge bg-secondary">{{ total_results }} results found</span>
+                                </h4>
+
+                                <!-- Patients -->
+                                {% if results.patients %}
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-users"></i> Patients ({{ results.patients|length }})</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Phone</th>
+                                                            <th>ID Number</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for patient in results.patients %}
+                                                            <tr>
+                                                                <td>{{ patient.full_name }}</td>
+                                                                <td>{{ patient.phone }}</td>
+                                                                <td>{{ patient.id_number }}</td>
+                                                                <td>
+                                                                    <a href="{% url 'patient_update' patient.pk %}" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-eye"></i> View
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Wound Cases -->
+                                {% if results.wound_cases %}
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-band-aid"></i> Wound Cases ({{ results.wound_cases|length }})</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Wound ID</th>
+                                                            <th>Patient</th>
+                                                            <th>Wound Type</th>
+                                                            <th>Created</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for wound in results.wound_cases %}
+                                                            <tr>
+                                                                <td>{{ wound.wound_id }}</td>
+                                                                <td>{{ wound.patient.full_name }}</td>
+                                                                <td>{{ wound.wound_type.name }}</td>
+                                                                <td>{{ wound.created_at|date:"M d, Y" }}</td>
+                                                                <td>
+                                                                    <a href="{% url 'wound_detail' wound.pk %}" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-eye"></i> View
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Appointments -->
+                                {% if results.appointments %}
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Appointments ({{ results.appointments|length }})</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Patient</th>
+                                                            <th>Doctor</th>
+                                                            <th>Date</th>
+                                                            <th>Clinic</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for appointment in results.appointments %}
+                                                            <tr>
+                                                                <td>{{ appointment.patient.full_name }}</td>
+                                                                <td>{{ appointment.doctor.get_full_name }}</td>
+                                                                <td>{{ appointment.appointment_date|date:"M d, Y H:i" }}</td>
+                                                                <td>{{ appointment.clinic.name }}</td>
+                                                                <td>
+                                                                    <a href="#" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-eye"></i> View
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Prescriptions -->
+                                {% if results.prescriptions %}
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-pills"></i> Prescriptions ({{ results.prescriptions|length }})</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Prescription #</th>
+                                                            <th>Patient</th>
+                                                            <th>Doctor</th>
+                                                            <th>Prescribed</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for prescription in results.prescriptions %}
+                                                            <tr>
+                                                                <td>{{ prescription.prescription_number }}</td>
+                                                                <td>{{ prescription.patient.full_name }}</td>
+                                                                <td>{{ prescription.doctor.get_full_name }}</td>
+                                                                <td>{{ prescription.prescribed_at|date:"M d, Y" }}</td>
+                                                                <td>
+                                                                    <a href="#" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-eye"></i> View
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if not total_results %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> No results found matching your search criteria.
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Search Tips -->
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-lightbulb"></i> Search Tips</h5>
+                            <ul class="mb-0">
+                                <li>Use the search box to find patients by name, phone, or ID number</li>
+                                <li>Filter wound cases by appearance, clinical notes, or wound ID</li>
+                                <li>Search appointments by notes or filter by date range</li>
+                                <li>Find prescriptions by diagnosis or instructions</li>
+                                <li>Use date filters to narrow results to specific time periods</li>
+                                <li>Filter by doctor or clinic for more targeted results</li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function clearFilters() {
+    document.getElementById('q').value = '';
+    document.getElementById('type').value = 'all';
+    document.getElementById('date_from').value = '';
+    document.getElementById('date_to').value = '';
+    document.getElementById('doctor').value = '';
+    document.getElementById('clinic').value = '';
+}
+</script>
+{% endblock %}
