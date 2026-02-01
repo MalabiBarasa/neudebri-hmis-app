@@ -1,12 +1,24 @@
-from django.utils.deprecation import MiddlewareMixin
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 
-class RBACMiddleware(MiddlewareMixin):
+class RBACMiddleware:
     """
     Middleware to enforce Role-Based Access Control
     """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Process request before view
+        self.process_view(request, None, (), {})
+
+        # Get response from next middleware/view
+        response = self.get_response(request)
+
+        # Process response after view (if needed)
+        return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """
@@ -76,10 +88,23 @@ class RBACMiddleware(MiddlewareMixin):
 
         return None
 
-class SecurityMiddleware(MiddlewareMixin):
+class SecurityMiddleware:
     """
     Security middleware for additional protection
     """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Process request
+        self.process_request(request)
+
+        # Get response from next middleware/view
+        response = self.get_response(request)
+
+        # Process response (if needed)
+        return response
 
     def process_request(self, request):
         """
