@@ -19,6 +19,16 @@ def create_initial_data(sender, **kwargs):
 
     # Only create initial data in production
     if not os.environ.get('DATABASE_URL'):
+        logger.info("Skipping initial data creation - not in production")
+        return
+
+    try:
+        from django.db import connection
+        # Test database connection
+        connection.ensure_connection()
+        logger.info("Database connection verified")
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
         return
 
     try:
