@@ -222,6 +222,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # Allauth settings
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    # 'guardian.backends.ObjectPermissionBackend',  # Temporarily disabled
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
@@ -233,6 +234,14 @@ ACCOUNT_SIGNUP_FIELDS = ['email', 'username', 'first_name', 'last_name']
 LOGIN_REDIRECT_URL = 'dashboard'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'index'
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+
+# Allauth rate limiting settings (more permissive)
+ACCOUNT_RATE_LIMITS = {
+    'login': '10/m/ip',
+    'login_failed': '5/m/ip',
+    'signup': '5/m/ip',
+    'password_reset': '5/m/ip',
+}
 
 # Phase 2 Enhancement Settings
 
@@ -282,7 +291,7 @@ SIMPLE_JWT = {
 # Guardian Settings
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'guardian.backends.ObjectPermissionBackend',
+    # 'guardian.backends.ObjectPermissionBackend',  # Temporarily disabled
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
