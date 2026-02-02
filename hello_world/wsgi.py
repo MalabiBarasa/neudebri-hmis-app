@@ -116,6 +116,14 @@ def run_startup_migrations():
             if profile_created:
                 logger.info(f"[WSGI] ✓ Created profile for {username}")
         
+        # Ensure all user profiles have correct roles
+        try:
+            from django.core.management import call_command
+            call_command('ensure_user_profiles', verbosity=0)
+            logger.info("[WSGI] ✓ Ensured user profiles are correct")
+        except Exception as e:
+            logger.error(f"[WSGI] Error ensuring user profiles: {e}")
+    
     except Exception as e:
         logger.error(f"[WSGI] Migration error: {e}", exc_info=True)
         # Don't crash - app can still start
