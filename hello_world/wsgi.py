@@ -123,6 +123,19 @@ def run_startup_migrations():
             logger.info("[WSGI] ✓ Ensured user profiles are correct")
         except Exception as e:
             logger.error(f"[WSGI] Error ensuring user profiles: {e}")
+        
+        # Create cache table if it doesn't exist
+        try:
+            from django.db import connection
+            cursor = connection.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cache_table'")
+            if not cursor.fetchone():
+                call_command('createcachetable', 'cache_table', verbosity=0)
+                logger.info("[WSGI] ✓ Created cache table")
+            else:
+                logger.info("[WSGI] ✓ Cache table already exists")
+        except Exception as e:
+            logger.error(f"[WSGI] Error creating cache table: {e}")
     
     except Exception as e:
         logger.error(f"[WSGI] Migration error: {e}", exc_info=True)
