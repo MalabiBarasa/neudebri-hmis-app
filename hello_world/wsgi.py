@@ -80,7 +80,7 @@ def run_startup_migrations():
             'doctor3': {'password': 'doctor3', 'role': 'doctor', 'email': 'doctor3@neudebri.com'},
             'nurse4': {'password': 'nurse4', 'role': 'nurse', 'email': 'nurse4@neudebri.com'},
             'nurse5': {'password': 'nurse5', 'role': 'nurse', 'email': 'nurse5@neudebri.com'},
-            'lab_tech6': {'password': 'lab_tech6', 'role': 'laboratory_technician', 'email': 'lab_tech6@neudebri.com'},
+            'lab_tech6': {'password': 'lab_tech6', 'role': 'lab_tech', 'email': 'lab_tech6@neudebri.com'},
             'pharmacist7': {'password': 'pharmacist7', 'role': 'pharmacist', 'email': 'pharmacist7@neudebri.com'},
             'cashier8': {'password': 'cashier8', 'role': 'cashier', 'email': 'cashier8@neudebri.com'},
         }

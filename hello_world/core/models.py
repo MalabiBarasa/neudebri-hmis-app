@@ -103,6 +103,29 @@ class UserProfile(models.Model):
         ]
     }
 
+    # Role to permission group mapping
+    ROLE_PERMISSIONS = {
+        'super_admin': ['patient_management', 'appointment_management', 'wound_care', 
+                       'billing_financial', 'laboratory', 'pharmacy', 'radiology', 
+                       'system_administration', 'reporting_analytics'],
+        'admin': ['patient_management', 'appointment_management', 'wound_care', 
+                 'billing_financial', 'laboratory', 'pharmacy', 'radiology', 
+                 'reporting_analytics'],
+        'doctor': ['patient_management', 'appointment_management', 'wound_care', 
+                  'laboratory', 'pharmacy', 'radiology', 'reporting_analytics'],
+        'nurse': ['patient_management', 'appointment_management', 'wound_care', 
+                 'laboratory', 'pharmacy', 'reporting_analytics'],
+        'cashier': ['billing_financial', 'reporting_analytics'],
+        'lab_tech': ['laboratory', 'reporting_analytics'],
+        'pharmacist': ['pharmacy', 'reporting_analytics'],
+        'receptionist': ['patient_management', 'appointment_management'],
+        'radiologist': ['radiology', 'reporting_analytics'],
+        'hr_manager': ['system_administration'],
+        'accountant': ['billing_financial', 'reporting_analytics'],
+        'it_support': ['system_administration'],
+        'guest': ['reporting_analytics'],  # Basic read-only access
+    }
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -234,8 +257,10 @@ class UserProfile(models.Model):
         permissions = set()
 
         # Add role-based permissions
-        role_permissions = self.PERMISSION_GROUPS.get(self.role, [])
-        permissions.update(role_permissions)
+        role_permission_groups = self.ROLE_PERMISSIONS.get(self.role, [])
+        for group in role_permission_groups:
+            group_permissions = self.PERMISSION_GROUPS.get(group, [])
+            permissions.update(group_permissions)
 
         # Add custom permissions
         if self.custom_permissions:
