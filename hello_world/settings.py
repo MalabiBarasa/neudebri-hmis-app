@@ -33,10 +33,30 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = []
+
+# Always include localhost for development
+CSRF_TRUSTED_ORIGINS.extend(['http://localhost:8000', 'https://localhost:8000', 'http://127.0.0.1:8000', 'https://127.0.0.1:8000'])
+
 if 'CODESPACE_NAME' in os.environ:
     codespace_name = config("CODESPACE_NAME")
     codespace_domain = config("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
-    CSRF_TRUSTED_ORIGINS = [f'https://{codespace_name}-8000.{codespace_domain}']
+    CSRF_TRUSTED_ORIGINS.append(f'https://{codespace_name}-8000.{codespace_domain}')
+else:
+    # For production (Render), add trusted origins
+    render_external_url = os.environ.get('RENDER_EXTERNAL_URL')
+    if render_external_url:
+        CSRF_TRUSTED_ORIGINS.append(render_external_url)
+    else:
+        # Fallback: add trusted origins based on ALLOWED_HOSTS
+        for host in ALLOWED_HOSTS:
+            if host not in ['localhost', '127.0.0.1']:
+                if host == '*.onrender.com':
+                    # Handle Render wildcard by adding the specific domain
+                    CSRF_TRUSTED_ORIGINS.append('https://neudebri-hmis-app.onrender.com')
+                else:
+                    CSRF_TRUSTED_ORIGINS.extend([f'https://{host}', f'http://{host}'])
 
 # Application definition
 
@@ -222,14 +242,11 @@ DBBACKUP_STORAGE_OPTIONS = {
     'location': BASE_DIR / 'backups'
 }
 
-# Redis Cache Configuration
+# Cache Configuration - Use database cache for development
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
     }
 }
 

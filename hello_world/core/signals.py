@@ -12,20 +12,22 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     """
-    Create UserProfile for new users
+    Create UserProfile for new users and ensure all users have profiles
     """
-    if created:
-        try:
-            from .models import UserProfile
-            UserProfile.objects.get_or_create(
-                user=instance,
-                defaults={
-                    'role': 'guest',  # Default role for new users
-                }
-            )
+    try:
+        from .models import UserProfile
+        profile, created = UserProfile.objects.get_or_create(
+            user=instance,
+            defaults={
+                'role': 'guest',  # Default role for new users
+            }
+        )
+        if created:
             logger.info(f"Created UserProfile for user: {instance.username}")
-        except Exception as e:
-            logger.error(f"Failed to create UserProfile for {instance.username}: {e}")
+        else:
+            logger.debug(f"UserProfile already exists for user: {instance.username}")
+    except Exception as e:
+        logger.error(f"Failed to create UserProfile for {instance.username}: {e}")
 
 
 @receiver(post_migrate)
