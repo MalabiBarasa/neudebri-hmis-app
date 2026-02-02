@@ -128,7 +128,12 @@ def run_startup_migrations():
         try:
             from django.db import connection
             cursor = connection.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cache_table'")
+            # Check if cache table exists (works for both SQLite and PostgreSQL)
+            if connection.vendor == 'sqlite':
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cache_table'")
+            else:  # PostgreSQL
+                cursor.execute("SELECT tablename FROM pg_tables WHERE tablename = 'cache_table'")
+            
             if not cursor.fetchone():
                 call_command('createcachetable', 'cache_table', verbosity=0)
                 logger.info("[WSGI] ✓ Created cache table")
