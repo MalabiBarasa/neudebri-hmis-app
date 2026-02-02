@@ -242,11 +242,14 @@ DBBACKUP_STORAGE_OPTIONS = {
     'location': BASE_DIR / 'backups'
 }
 
-# Cache Configuration - Use database cache for development
+# Cache Configuration - Force database cache to avoid Redis issues
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
         'LOCATION': 'cache_table',
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        },
     }
 }
 
